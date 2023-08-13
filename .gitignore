@@ -388,3 +388,4 @@ build
 CMakeLists.txt.user
 *.json
 *.idx
+.vsxproj
