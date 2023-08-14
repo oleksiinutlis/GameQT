@@ -72,7 +72,7 @@ public:
         acceptor( ioContext, tcp::endpoint(tcp::v4(), port) )
     {
     }
-    
+
     void start()
     {
         post( ioContext, [this] { accept(); } );
@@ -80,11 +80,7 @@ public:
     
     void execute()
     {
-        for(;;)
-        {
-            std::cout << "!!! ioContext.run() ";
-            ioContext.run();
-        }
+        ioContext.run();
     }
     
     void accept()

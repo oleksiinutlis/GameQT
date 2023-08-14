@@ -8,11 +8,16 @@ using ip::tcp;
 class Client
 {
     io_context ioContext;
+    //boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_work;
     tcp::socket socket;
     boost::asio::streambuf streambuf;
     
 public:
-    Client() : ioContext(),socket(ioContext) {}
+    Client() :
+        ioContext(),
+        //m_work( boost::asio::make_work_guard(ioContext) ),
+        socket(ioContext)
+    {}
     
     // Close the connection
     //socket.close();
@@ -30,10 +35,7 @@ public:
         
         post( ioContext, [this] { readResponse(); } );
 
-        for(;;)
-        {
-            ioContext.run();
-        }
+        ioContext.run();
     }
     
     void readResponse()
@@ -54,6 +56,7 @@ public:
                 }
                 
                 streambuf.consume(bytes_transferred);
+                readResponse();
             }
         });
     }
