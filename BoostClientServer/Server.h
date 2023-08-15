@@ -40,6 +40,7 @@ public:
 
     void readClientRequest()
     {
+        m_streambuf.prepare(1024);
         async_read_until( m_socket, m_streambuf, '\n',
             [this] ( const boost::system::error_code& ec, std::size_t bytes_transferred )
             {
