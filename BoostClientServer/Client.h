@@ -74,7 +74,7 @@ public:
         // Receive the response from the server
         char data[1024];
         size_t len = socket.read_some(buffer(data));
-        std::cout << "Received: " << data << std::endl;
+        std::cout << "Received: " << std::string( data, len ) << std::endl;
         readResponse();
         return;
 
