@@ -26,6 +26,21 @@ public:
     void execute( std::string addr, int port, std::string greeting )
     {
         socket = tcp::socket(ioContext);
+
+        // Connect to the server
+        socket.connect( tcp::endpoint(ip::address::from_string("127.0.0.1"), 12345) );
+
+        // Send a message to the server
+        write( socket, buffer(greeting+"\n") );
+        
+        readResponse();
+        readResponse();
+//
+//        ioContext.run();
+
+        
+        
+        socket = tcp::socket(ioContext);
         auto endpoint = tcp::endpoint(ip::address::from_string( addr.c_str()), port);
 
         socket.async_connect(endpoint, [this,greeting=greeting] (const boost::system::error_code& error)
