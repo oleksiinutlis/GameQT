@@ -41,18 +41,29 @@ public:
     void readClientRequest()
     {
         async_read_until( m_socket, m_streambuf, '\n',
-            [this] ( const boost::system::error_code& error_code, std::size_t bytes_transferred )
+            [this] ( const boost::system::error_code& ec, std::size_t bytes_transferred )
             {
-                std::cout << "Received: " << (const char*)m_streambuf.data().data() << std::endl;
+                if ( ec )
+                {
+                    std::cout << "!!!! readClientRequest error: " << ec.message() << std::endl;
+                    exit(-1);
+                }
+                else
+                {
+                    std::cout << "Received: " << (const char*)m_streambuf.data().data() << std::endl;
 
-                std::istream request( &m_streambuf );
-
-                std::string command;
-                std::getline( request, command, ';' );
-
-                std::cout << "command: " << command << std::endl;
-
-                m_game.handleMessage( command, request, *this );
+//todo
+//                std::istream request( &m_streambuf );
+//
+//                std::string command;
+//                std::getline( request, command, ';' );
+//
+//                std::cout << "command: " << command << std::endl;
+//
+//                    m_game.handleMessage( command, request, *this );
+                    
+                    sendMessage( "WaitingSecondPlayer;" );
+                }
         });
     }
 };
@@ -87,6 +98,7 @@ public:
     {
         auto* clientSession = new ClientSession( m_game, ioContext );
         m_sessions.push_back( clientSession );
+        
         acceptor.async_accept( clientSession->socket(), [ this, clientSession ] ( boost::system::error_code ec )
         {
             if ( ec )
