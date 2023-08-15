@@ -7,13 +7,13 @@ using ip::tcp;
 class IClientSession
 {
 public:
-    virtual void sendMessage( const std::string& command ) = 0;
+    virtual void sendMessage( const std::string& message ) = 0;
 };
 
 class IGame
 {
 public:
-    virtual std::string handleCommand( const std::string& command, std::istream& request, IClientSession& client ) = 0;
+    virtual std::string handleMessage( const std::string& command, std::istream& request, IClientSession& client ) = 0;
 };
 
 class ClientSession: public IClientSession
@@ -51,7 +51,7 @@ public:
 
                 std::cout << "command: " << command << std::endl;
 
-                std::string response = m_game.handleCommand( command, request, *this );
+                std::string response = m_game.handleMessage( command, request, *this );
                 sendMessage( response );
         });
     }
@@ -99,9 +99,5 @@ public:
 
             post( ioContext, [this] { accept(); } );
         });
-    }
-
-    void clientThreadFunc( tcp::socket&& socket )
-    {
     }
 };

@@ -29,7 +29,7 @@ class Game : public IGame
     
     std::map< IClientSession*, std::pair<Match*,int> > m_players;
 
-    virtual std::string handleCommand( const std::string& command, std::istream& request, IClientSession& client ) override
+    virtual std::string handleMessage( const std::string& command, std::istream& request, IClientSession& client ) override
     {
         if ( command == "StartGame" )
         {
