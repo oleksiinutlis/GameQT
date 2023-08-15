@@ -72,7 +72,6 @@ class Server
 {
     IGame&          m_game;
     io_context      ioContext;
-//    tcp::socket     socket;
     tcp::acceptor   acceptor;
     
     std::vector<ClientSession*> m_sessions;
@@ -109,7 +108,7 @@ public:
             std::cout << "Client connected: " << clientSession->socket().remote_endpoint() << std::endl;
             clientSession->readClientRequest();
 
-            post( ioContext, [this] { accept(); } );
+            accept();
         });
     }
 };

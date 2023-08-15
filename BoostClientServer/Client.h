@@ -57,6 +57,12 @@ public:
     void readResponse()
     {
         // Receive the response from the server
+        char data[1024];
+        size_t len = socket.read_some(buffer(data));
+        std::cout << "Received: " << data << std::endl;
+        readResponse();
+        return;
+
         boost::asio::async_read_until( socket, streambuf, '\n',
           [this]( const boost::system::error_code& error_code, std::size_t bytes_transferred )
         {
