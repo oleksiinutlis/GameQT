@@ -26,15 +26,31 @@ public:
     void execute( std::string addr, int port, std::string greeting )
     {
         socket = tcp::socket(ioContext);
+        auto endpoint = tcp::endpoint(ip::address::from_string( addr.c_str()), port);
 
-        // Connect to the server
-        socket.connect( tcp::endpoint(ip::address::from_string("127.0.0.1"), 12345) );
-
-        // Send a message to the server
-        write( socket, buffer(greeting+"\n") );
+        socket.async_connect(endpoint, [this,greeting=greeting] (const boost::system::error_code& error)
+        {
+            if ( error )
+            {
+                std::cout << "Connection error: " << error.message() << std::endl;
+            }
+            else
+            {
+                std::cout << "Connected to the server!" << std::endl;
+                async_write( socket, boost::asio::buffer( greeting+"\n" ), [this] ( const boost::system::error_code& error, std::size_t bytes_transferred )
+                {
+                    if ( error )
+                    {
+                        std::cout << "Client write error: " << error.message() << std::endl;
+                    }
+                    else
+                    {
+                        readResponse();
+                    }
+                });
+            }
+        });
         
-        post( ioContext, [this] { readResponse(); } );
-
         ioContext.run();
     }
     
@@ -44,7 +60,11 @@ public:
         boost::asio::async_read_until( socket, streambuf, '\n',
           [this]( const boost::system::error_code& error_code, std::size_t bytes_transferred )
         {
-            if ( ! error_code )
+            if ( error_code )
+            {
+                std::cout << "Client read error: " << error_code.message() << std::endl;
+            }
+            else
             {
                 {
                     std::istream response( &streambuf );
