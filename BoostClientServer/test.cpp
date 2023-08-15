@@ -40,14 +40,14 @@ class Game : public IGame
             if ( getline( request, matchId, ';' ).eof() )
             {
                 std::cout << "Bad request; is ignored:" << std::endl;
-                return "";
+                return;
             }
             
             std::string widthStr;
             if ( getline( request, widthStr, ';' ).eof() )
             {
                 std::cout << "Bad request; is ignored:" << std::endl;
-                return "";
+                return;
             }
             int width = stoi(widthStr);
 
@@ -55,7 +55,7 @@ class Game : public IGame
             if ( getline( request, heightStr, ';' ).eof() )
             {
                 std::cout << "Bad request; is ignored:" << std::endl;
-                return "";
+                return;
             }
             int height = stoi(heightStr);
 
