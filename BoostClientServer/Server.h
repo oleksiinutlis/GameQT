@@ -8,7 +8,7 @@ using ip::tcp;
 class IClientSession
 {
 public:
-    virtual void sendMessage( const std::string& message ) = 0;
+    virtual void sendMessage( std::string message ) = 0;
 };
 
 class IGame
@@ -30,9 +30,9 @@ public:
     
     tcp::socket& socket() { return m_socket; }
     
-    virtual void sendMessage( const std::string& command ) override
+    virtual void sendMessage( std::string command ) override
     {
-        async_write( m_socket, buffer( command+"\n"),
+        async_write( m_socket, buffer( command+"\n" ),
             [] ( const boost::system::error_code& error_code, std::size_t bytes_transferred  )
             {
             });
@@ -50,7 +50,7 @@ public:
                 }
                 else
                 {
-                    std::cout << "Received: " << (const char*)m_streambuf.data().data() << std::endl;
+                    std::cout << "Received: " << std::string( (const char*)m_streambuf.data().data(), m_streambuf.size() ) << std::endl;
 
 //todo
 //                std::istream request( &m_streambuf );
