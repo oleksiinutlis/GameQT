@@ -32,7 +32,7 @@ class Game : public IGame
     
     std::map< IClientSession*, std::pair<Match*,int> > m_players;
 
-    virtual std::string handleMessage( const std::string& command, std::istream& request, IClientSession& client ) override
+    virtual void handleMessage( const std::string& command, std::istream& request, IClientSession& client ) override
     {
         if ( command == "StartGame" )
         {
@@ -63,7 +63,7 @@ class Game : public IGame
             if ( auto matchIt = m_matches.find( matchId ); matchIt == m_matches.end() )
             {
                 m_matches[matchId] = Match{matchId,&client,nullptr,width,height};
-                return "WaitingSecondPlayer;";
+                client.sendMessage( "WaitingSecondPlayer;" );
             }
             else
             {
@@ -71,11 +71,9 @@ class Game : public IGame
                 matchIt->second.m_width = std::min( matchIt->second.m_width, width );
                 matchIt->second.m_height = std::min( matchIt->second.m_width, height );
                 matchIt->second.m_leftPlayer->sendMessage( "GameStarted;left;" + std::to_string(matchIt->second.m_width) + ";" + std::to_string(matchIt->second.m_height) + ";" );
-                return "GameStarted;right;" + std::to_string(matchIt->second.m_width) + ";" + std::to_string(matchIt->second.m_height) + ";" ;
+                matchIt->second.m_rightPlayer->sendMessage( "GameStarted;right;" + std::to_string(matchIt->second.m_width) + ";" + std::to_string(matchIt->second.m_height) + ";" );
             }
-            
         }
-        
     }
 };
 

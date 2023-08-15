@@ -14,7 +14,7 @@ public:
 class IGame
 {
 public:
-    virtual std::string handleMessage( const std::string& command, std::istream& request, IClientSession& client ) = 0;
+    virtual void handleMessage( const std::string& command, std::istream& request, IClientSession& client ) = 0;
 };
 
 class ClientSession: public IClientSession
@@ -52,8 +52,7 @@ public:
 
                 std::cout << "command: " << command << std::endl;
 
-                std::string response = m_game.handleMessage( command, request, *this );
-                sendMessage( response );
+                m_game.handleMessage( command, request, *this );
         });
     }
 };
