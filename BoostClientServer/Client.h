@@ -14,7 +14,6 @@ class Client
 public:
     Client() :
         ioContext(),
-        //m_work( boost::asio::make_work_guard(ioContext) ),
         socket(ioContext)
     {}
     
