@@ -8,7 +8,6 @@ using ip::tcp;
 class Client
 {
     io_context ioContext;
-    //boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_work;
     tcp::socket socket;
     boost::asio::streambuf streambuf;
     
@@ -19,10 +18,11 @@ public:
         socket(ioContext)
     {}
     
-    // Close the connection
-    //socket.close();
+    ~Client()
+    {
+        std::cout << "!!!! ~Client(): " << std::endl;
+    }
     
-
     void execute( std::string addr, int port, std::string greeting )
     {
         socket = tcp::socket(ioContext);
@@ -34,39 +34,38 @@ public:
         write( socket, buffer(greeting+"\n") );
         
         readResponse();
-        readResponse();
+        return;
+        
 //
 //        ioContext.run();
-
-        
-        
-        socket = tcp::socket(ioContext);
-        auto endpoint = tcp::endpoint(ip::address::from_string( addr.c_str()), port);
-
-        socket.async_connect(endpoint, [this,greeting=greeting] (const boost::system::error_code& error)
-        {
-            if ( error )
-            {
-                std::cout << "Connection error: " << error.message() << std::endl;
-            }
-            else
-            {
-                std::cout << "Connected to the server!" << std::endl;
-                async_write( socket, boost::asio::buffer( greeting+"\n" ), [this] ( const boost::system::error_code& error, std::size_t bytes_transferred )
-                {
-                    if ( error )
-                    {
-                        std::cout << "Client write error: " << error.message() << std::endl;
-                    }
-                    else
-                    {
-                        readResponse();
-                    }
-                });
-            }
-        });
-        
-        ioContext.run();
+//
+//        socket = tcp::socket(ioContext);
+//        auto endpoint = tcp::endpoint(ip::address::from_string( addr.c_str()), port);
+//
+//        socket.async_connect(endpoint, [this,greeting=greeting] (const boost::system::error_code& error)
+//        {
+//            if ( error )
+//            {
+//                std::cout << "Connection error: " << error.message() << std::endl;
+//            }
+//            else
+//            {
+//                std::cout << "Connected to the server!" << std::endl;
+//                async_write( socket, boost::asio::buffer( greeting+"\n" ), [this] ( const boost::system::error_code& error, std::size_t bytes_transferred )
+//                {
+//                    if ( error )
+//                    {
+//                        std::cout << "Client write error: " << error.message() << std::endl;
+//                    }
+//                    else
+//                    {
+//                        readResponse();
+//                    }
+//                });
+//            }
+//        });
+//
+//        ioContext.run();
     }
     
     void readResponse()
@@ -78,27 +77,27 @@ public:
         readResponse();
         return;
 
-        boost::asio::async_read_until( socket, streambuf, '\n',
-          [this]( const boost::system::error_code& error_code, std::size_t bytes_transferred )
-        {
-            if ( error_code )
-            {
-                std::cout << "Client read error: " << error_code.message() << std::endl;
-            }
-            else
-            {
-                {
-                    std::istream response( &streambuf );
-
-                    std::string command;
-                    std::getline( response, command, ';' );
-
-                    std::cout << "response command: " << command << std::endl;
-                }
-                
-                streambuf.consume(bytes_transferred);
-                readResponse();
-            }
-        });
+//        boost::asio::async_read_until( socket, streambuf, '\n',
+//          [this]( const boost::system::error_code& error_code, std::size_t bytes_transferred )
+//        {
+//            if ( error_code )
+//            {
+//                std::cout << "Client read error: " << error_code.message() << std::endl;
+//            }
+//            else
+//            {
+//                {
+//                    std::istream response( &streambuf );
+//
+//                    std::string command;
+//                    std::getline( response, command, ';' );
+//
+//                    std::cout << "response command: " << command << std::endl;
+//                }
+//
+//                streambuf.consume(bytes_transferred);
+//                readResponse();
+//            }
+//        });
     }
 };
