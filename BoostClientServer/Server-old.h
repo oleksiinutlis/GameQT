@@ -63,6 +63,11 @@ using ip::tcp;
 
 class ClientSession : public std::enable_shared_from_this<ClientSession>
 {
+    tcp::socket socket_;
+    boost::asio::streambuf  m_streambuf;
+//    enum { max_length = 1024 };
+//    char data_[max_length];
+
 public:
     explicit ClientSession(tcp::socket socket)
         : socket_(std::move(socket))
@@ -83,21 +88,30 @@ private:
     void doRead()
     {
         auto self(shared_from_this());
-        socket_.async_read_some(boost::asio::buffer(data_, max_length-1),
+        async_read_until( socket_, m_streambuf, '\n',
+        //socket_.async_read_some(boost::asio::buffer(data_, max_length-1),
                                 [this, self](boost::system::error_code ec, std::size_t length) {
                                     if (!ec)
                                     {
-                                        data_[length] = 0;
-                                        std::cout << "Received from client: " << data_ << std::endl;
+                                        std::cout << "Received: " << std::string( (const char*)m_streambuf.data().data(), m_streambuf.size() ) << std::endl;
                                         doWrite(length);
                                     }
                                 });
+
+//        socket_.async_read_some( boost::asio::buffer(data_, max_length-1),
+//                                [this, self](boost::system::error_code ec, std::size_t length) {
+//                                    if (!ec)
+//                                    {
+//                                        std::cout << "Received from client: " << m_streambuf.data().data() << std::endl;
+//                                        doWrite(length);
+//                                    }
+//                                });
     }
 
     void doWrite(std::size_t length)
     {
         auto self(shared_from_this());
-        boost::asio::async_write(socket_, boost::asio::buffer(data_, length),
+        boost::asio::async_write(socket_, m_streambuf, //boost::asio::buffer(data_, length),
                                  [this, self](boost::system::error_code ec, std::size_t /*length*/) {
                                      if (!ec)
                                      {
@@ -105,10 +119,6 @@ private:
                                      }
                                  });
     }
-
-    tcp::socket socket_;
-    enum { max_length = 1024 };
-    char data_[max_length];
 };
 
 
