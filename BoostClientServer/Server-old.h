@@ -69,15 +69,12 @@ using ip::tcp;
 
 class ClientSession : public std::enable_shared_from_this<ClientSession>
 {
-    tcp::socket socket_;
+    tcp::socket m_socket;
     boost::asio::streambuf  m_streambuf;
 
-//    enum { max_length = 1024 };
-//    char data_[max_length];
-
 public:
-    explicit ClientSession(tcp::socket socket)
-        : socket_(std::move(socket))
+    ClientSession(tcp::socket&& socket)
+        : m_socket(std::move(socket))
     {
     }
 
@@ -90,7 +87,7 @@ public:
     {
         auto self(shared_from_this());
 
-        async_read_until( socket_, m_streambuf, '\n',
+        async_read_until( m_socket, m_streambuf, '\n',
             [this, self] ( const boost::system::error_code& ec, std::size_t bytes_transferred )
             {
                 if ( ec )
@@ -110,7 +107,7 @@ public:
     {
         auto self(shared_from_this());
 
-        boost::asio::async_write(socket_, m_streambuf, //boost::asio::buffer(data_, length),
+        boost::asio::async_write(m_socket, m_streambuf, //boost::asio::buffer(data_, length),
              [this, self](boost::system::error_code ec, std::size_t /*length*/) {
                  if (!ec)
                  {
