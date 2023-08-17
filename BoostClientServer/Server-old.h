@@ -18,26 +18,19 @@ class ClientSession : public std::enable_shared_from_this<ClientSession> //: pub
     boost::asio::streambuf  m_streambuf;
 
 public:
-    ClientSession(tcp::socket&& socket)
-        : m_socket(std::move(socket))
-    {
-    }
+    ClientSession(tcp::socket&& socket) : m_socket(std::move(socket)) {}
 
-    ~ClientSession()
-    {
-        std::cout << "!!!! ~ClientSession()" << std::endl;
-    }
-
-//    tcp::socket& socket() { return m_socket; }
+    ~ClientSession() { std::cout << "!!!! ~ClientSession()" << std::endl; }
 
     virtual void sendMessage( std::string command )
     {
         auto self(shared_from_this());
 
-        std::ostream os(&m_streambuf);
+        boost::asio::streambuf streambuf;
+        std::ostream os(&streambuf);
         os << command+"\n";
         
-        async_write( m_socket, m_streambuf,
+        async_write( m_socket, streambuf,
             [this,self] ( const boost::system::error_code& ec, std::size_t bytes_transferred  )
             {
                 if ( ec )
@@ -45,7 +38,6 @@ public:
                     std::cout << "!!!! ClientSession::sendMessage error: " << ec.message() << std::endl;
                     exit(-1);
                 }
-                readMessage();
             });
     }
 
@@ -66,6 +58,7 @@ public:
                     std::cout << "Received: " << std::string( (const char*)m_streambuf.data().data(), m_streambuf.size() ) << std::endl;
                     m_streambuf.consume(bytes_transferred);
                     sendMessage( "WaitingSecondPlayer;" );
+                    readMessage();
                 }
         });
     }
