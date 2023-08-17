@@ -31,8 +31,10 @@ public:
 
     virtual void sendMessage( std::string command )
     {
+        auto self(shared_from_this());
+
         async_write( m_socket, buffer( command+"\n" ),
-            [this] ( const boost::system::error_code& ec, std::size_t bytes_transferred  )
+            [this,self] ( const boost::system::error_code& ec, std::size_t bytes_transferred  )
             {
                 if ( ec )
                 {
@@ -45,8 +47,10 @@ public:
 
     void readMessage()
     {
+        auto self(shared_from_this());
+        
         async_read_until( m_socket, m_streambuf, '\n',
-            [this] ( const boost::system::error_code& ec, std::size_t bytes_transferred )
+            [this,self] ( const boost::system::error_code& ec, std::size_t bytes_transferred )
             {
                 if ( ec )
                 {
@@ -67,6 +71,7 @@ public:
 //{
 //    tcp::socket socket_;
 //    boost::asio::streambuf  m_streambuf;
+//
 ////    enum { max_length = 1024 };
 ////    char data_[max_length];
 //
@@ -156,12 +161,14 @@ public:
         acceptor.async_accept(m_socket, [this](boost::system::error_code ec) {
             if (!ec)
             {
-//                std::make_shared<ClientSession>(std::move(m_socket))->start();
+                //std::make_shared<ClientSession>(std::move(m_socket))->start();
 
-                auto* clientSession = new ClientSession( std::move(m_socket) );
-                m_sessions.push_back( clientSession );
-    
-                clientSession->readMessage();
+                std::make_shared<ClientSession>(std::move(m_socket))->readMessage();
+
+//                auto* clientSession = new ClientSession( std::move(m_socket) );
+//                m_sessions.push_back( clientSession );
+//
+//                clientSession->readMessage();
             }
 
             accept();
