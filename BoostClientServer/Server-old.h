@@ -61,7 +61,7 @@ public:
     }
 };
 
-class Server
+class TcpServer
 {
     io_context      ioContext;
     tcp::acceptor   acceptor;
@@ -69,7 +69,8 @@ class Server
     std::vector<ClientSession*> m_sessions;
 
 public:
-    Server( int port ) :
+    TcpServer( int port ) :
+        ioContext(),
         acceptor( ioContext, tcp::endpoint(tcp::v4(), port) )
     {
     }
