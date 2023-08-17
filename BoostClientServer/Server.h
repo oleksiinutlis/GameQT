@@ -11,6 +11,11 @@ public:
     {
     }
 
+    ~Session()
+    {
+        std::cout << "~Session";
+    }
+
     void start()
     {
         doRead();
