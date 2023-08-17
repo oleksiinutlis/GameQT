@@ -88,36 +88,42 @@ private:
     void doRead()
     {
         auto self(shared_from_this());
-        async_read_until( socket_, m_streambuf, '\n',
-        //socket_.async_read_some(boost::asio::buffer(data_, max_length-1),
-                                [this, self](boost::system::error_code ec, std::size_t length) {
-                                    if (!ec)
-                                    {
-                                        std::cout << "Received: " << std::string( (const char*)m_streambuf.data().data(), m_streambuf.size() ) << std::endl;
-                                        doWrite(length);
-                                    }
-                                });
+        
+//        async_read_until( socket_, m_streambuf, '\n',
+//            [this, self](boost::system::error_code ec, std::size_t length) {
+//                if (!ec)
+//                {
+//                    std::cout << "Received: " << std::string( (const char*)m_streambuf.data().data(), m_streambuf.size() ) << std::endl;
+//                    doWrite(length);
+//                }
+//            });
 
-//        socket_.async_read_some( boost::asio::buffer(data_, max_length-1),
-//                                [this, self](boost::system::error_code ec, std::size_t length) {
-//                                    if (!ec)
-//                                    {
-//                                        std::cout << "Received from client: " << m_streambuf.data().data() << std::endl;
-//                                        doWrite(length);
-//                                    }
-//                                });
+        async_read_until( socket_, m_streambuf, '\n',
+            [this, self] ( const boost::system::error_code& ec, std::size_t bytes_transferred )
+            {
+                if ( ec )
+                {
+                    std::cout << "!!!! ClientSession::readMessage error: " << ec.message() << std::endl;
+                    exit(-1);
+                }
+                else
+                {
+                    std::cout << "Received: " << std::string( (const char*)m_streambuf.data().data(), m_streambuf.size() ) << std::endl;
+                    doWrite( m_streambuf.size() );
+                }
+        });
     }
 
     void doWrite(std::size_t length)
     {
         auto self(shared_from_this());
         boost::asio::async_write(socket_, m_streambuf, //boost::asio::buffer(data_, length),
-                                 [this, self](boost::system::error_code ec, std::size_t /*length*/) {
-                                     if (!ec)
-                                     {
-                                         doRead();
-                                     }
-                                 });
+             [this, self](boost::system::error_code ec, std::size_t /*length*/) {
+                 if (!ec)
+                 {
+                     doRead();
+                 }
+             });
     }
 };
 
