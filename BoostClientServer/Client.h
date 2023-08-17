@@ -7,14 +7,15 @@ using ip::tcp;
 
 class Client
 {
-    io_context ioContext;
-    tcp::socket socket;
-    boost::asio::streambuf streambuf;
+    io_context  m_ioContext;
+    tcp::socket m_socket;
+    
+    boost::asio::streambuf m_streambuf;
     
 public:
     Client() :
-        ioContext(),
-        socket(ioContext)
+        m_ioContext(),
+        m_socket(m_ioContext)
     {}
     
     ~Client()
@@ -24,22 +25,10 @@ public:
     
     void execute( std::string addr, int port, std::string greeting )
     {
-//        socket = tcp::socket(ioContext);
-//
-//        // Connect to the server
-//        socket.connect( tcp::endpoint(ip::address::from_string("127.0.0.1"), 12345) );
-//
-//        // Send a message to the server
-//        write( socket, buffer(greeting+"\n") );
-//
-//        readResponse();
-//        return;
-        
-
-        socket = tcp::socket(ioContext);
+        m_socket = tcp::socket(m_ioContext);
         auto endpoint = tcp::endpoint(ip::address::from_string( addr.c_str()), port);
 
-        socket.async_connect(endpoint, [this,greeting=greeting] (const boost::system::error_code& error)
+        m_socket.async_connect(endpoint, [this,greeting=greeting] (const boost::system::error_code& error)
         {
             if ( error )
             {
@@ -47,29 +36,34 @@ public:
             }
             else
             {
+                boost::asio::streambuf streambuf;
+                std::ostream os(&streambuf);
+                os << greeting+"\n";
+
                 std::cout << "Connected to the server!" << std::endl;
-                async_write( socket, boost::asio::buffer( greeting+"\n" ), [this] ( const boost::system::error_code& error, std::size_t bytes_transferred )
-                {
-                    if ( error )
+                async_write( m_socket, streambuf,
+                    [this] ( const boost::system::error_code& error, std::size_t bytes_transferred )
                     {
-                        std::cout << "Client write error: " << error.message() << std::endl;
-                    }
-                    else
-                    {
-                        readResponse();
-                    }
-                });
+                        if ( error )
+                        {
+                            std::cout << "Client write error: " << error.message() << std::endl;
+                        }
+                        else
+                        {
+                            readResponse();
+                        }
+                    });
             }
         });
 
-        ioContext.run();
+        m_ioContext.run();
     }
     
     void readResponse()
     {
         // Receive the response from the server
 
-        boost::asio::async_read_until( socket, streambuf, '\n',
+        boost::asio::async_read_until( m_socket, m_streambuf, '\n',
           [this]( const boost::system::error_code& error_code, std::size_t bytes_transferred )
         {
             if ( error_code )
@@ -79,7 +73,7 @@ public:
             else
             {
                 {
-                    std::istream response( &streambuf );
+                    std::istream response( &m_streambuf );
 
                     std::string command;
                     std::getline( response, command, ';' );
@@ -87,7 +81,7 @@ public:
                     std::cout << "response command: " << command << std::endl;
                 }
 
-                streambuf.consume(bytes_transferred);
+                m_streambuf.consume(bytes_transferred);
                 readResponse();
             }
         });
