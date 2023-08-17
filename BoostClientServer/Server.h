@@ -1,97 +1,102 @@
 #include <iostream>
+#include <map>
 #include <boost/asio.hpp>
 
-using boost::asio::ip::tcp;
+using namespace boost::asio;
+using ip::tcp;
 
-class Session : public std::enable_shared_from_this<Session>
+class IClientSession
 {
 public:
-    explicit Session(tcp::socket socket)
-        : socket_(std::move(socket))
-    {
-    }
-
-    ~Session()
-    {
-        std::cout << "~Session";
-    }
-
-    void start()
-    {
-        doRead();
-    }
-
-private:
-    void doRead()
-    {
-        auto self(shared_from_this());
-        socket_.async_read_some(boost::asio::buffer(data_, max_length-1),
-                                [this, self](boost::system::error_code ec, std::size_t length) {
-                                    if (!ec)
-                                    {
-                                        data_[length] = 0;
-                                        std::cout << "Received from client: " << data_ << std::endl;
-                                        doWrite(length);
-                                    }
-                                });
-    }
-
-    void doWrite(std::size_t length)
-    {
-        auto self(shared_from_this());
-        boost::asio::async_write(socket_, boost::asio::buffer(data_, length),
-                                 [this, self](boost::system::error_code ec, std::size_t /*length*/) {
-                                     if (!ec)
-                                     {
-                                         doRead();
-                                     }
-                                 });
-    }
-
-    tcp::socket socket_;
-    enum { max_length = 1024 };
-    char data_[max_length];
+    virtual void sendMessage( std::string message ) = 0;
+    virtual ~IClientSession() = default;
 };
 
-class Server
+class ClientSession : public std::enable_shared_from_this<ClientSession>, public IClientSession
 {
+    tcp::socket             m_socket;
+    boost::asio::streambuf  m_streambuf;
+
 public:
-    Server(boost::asio::io_service& io_service, short port)
-        : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
-          socket_(io_service)
+    ClientSession(tcp::socket&& socket) : m_socket(std::move(socket)) {}
+
+    ~ClientSession() { std::cout << "!!!! ~ClientSession()" << std::endl; }
+
+    virtual void sendMessage( std::string command ) override
     {
-        doAccept();
+        auto self(shared_from_this());
+
+        boost::asio::streambuf streambuf;
+        std::ostream os(&streambuf);
+        os << command+"\n";
+        
+        async_write( m_socket, streambuf,
+            [this,self] ( const boost::system::error_code& ec, std::size_t bytes_transferred  )
+            {
+                if ( ec )
+                {
+                    std::cout << "!!!! ClientSession::sendMessage error: " << ec.message() << std::endl;
+                    exit(-1);
+                }
+            });
     }
 
-private:
-    void doAccept()
+    void readMessage()
     {
-        acceptor_.async_accept(socket_, [this](boost::system::error_code ec) {
-            if (!ec)
-            {
-                std::make_shared<Session>(std::move(socket_))->start();
-            }
+        auto self(shared_from_this());
 
-            doAccept();
+        async_read_until( m_socket, m_streambuf, '\n',
+            [this,self] ( const boost::system::error_code& ec, std::size_t bytes_transferred )
+            {
+                if ( ec )
+                {
+                    std::cout << "!!!! ClientSession::readMessage error: " << ec.message() << std::endl;
+                    exit(-1);
+                }
+                else
+                {
+                    std::cout << "Received: " << std::string( (const char*)m_streambuf.data().data(), m_streambuf.size() ) << std::endl;
+                    m_streambuf.consume(bytes_transferred);
+                    sendMessage( "WaitingSecondPlayer;" );
+                    readMessage();
+                }
         });
     }
-
-    tcp::acceptor acceptor_;
-    tcp::socket socket_;
 };
 
-//int main()
-//{
-//    try
-//    {
-//        boost::asio::io_service io_service;
-//        Server server(io_service, 1234);
-//        io_service.run();
-//    }
-//    catch (std::exception& e)
-//    {
-//        std::cerr << "Exception: " << e.what() << std::endl;
-//    }
-//
-//    return 0;
-//}
+
+class TcpServer
+{
+    io_context      m_ioContext;
+    tcp::acceptor   m_acceptor;
+    tcp::socket     m_socket;
+    
+    std::vector<std::shared_ptr<ClientSession>> m_sessions;
+
+public:
+    TcpServer( int port ) :
+        m_ioContext(),
+        m_acceptor( m_ioContext, tcp::endpoint(tcp::v4(), port) ),
+        m_socket(m_ioContext)
+    {
+        accept();
+    }
+
+    void execute()
+    {
+        post( m_ioContext, [this] { accept(); } );
+        m_ioContext.run();
+    }
+    
+    void accept()
+    {
+        m_acceptor.async_accept(m_socket, [this](boost::system::error_code ec) {
+            if (!ec)
+            {
+                std::make_shared<ClientSession>(std::move(m_socket))->readMessage();
+            }
+
+            accept();
+        });
+    }
+};
