@@ -18,9 +18,16 @@ int main()
 
     std::thread( []
     {
-        TcpServer server(12345);
-        server.execute();
-   }).detach();
+        boost::asio::io_service io_service;
+        TcpServer server(io_service, 12345);
+        io_service.run();
+    }).detach();
+
+//    std::thread( []
+//    {
+//        TcpServer server(12345);
+//        server.execute();
+//   }).detach();
 
     //std::this_thread::sleep_for(std::chrono::milliseconds(100));
     

@@ -18,7 +18,7 @@ class ClientSession: public IClientSession
     boost::asio::streambuf  m_streambuf;
 
 public:
-    ClientSession( io_context& ioContext ) : m_socket( ioContext )
+    ClientSession( tcp::socket&& socket ) : m_socket( std::move(socket) )
     {
     }
     
@@ -63,30 +63,28 @@ public:
 
 class TcpServer
 {
-    boost::asio::io_service  ioContext;
     tcp::acceptor   acceptor;
+    tcp::socket     m_socket;
     
     std::vector<ClientSession*> m_sessions;
 
 public:
-    TcpServer( int port ) :
-        ioContext(),
-        acceptor( ioContext, tcp::endpoint(tcp::v4(), port) )
+    TcpServer( boost::asio::io_service&  ioContext, int port ) :
+        acceptor( ioContext, tcp::endpoint(tcp::v4(), port) ),
+        m_socket(ioContext)
     {
+        accept();
     }
 
-    void execute()
-    {
-        post( ioContext, [this] { accept(); } );
-        ioContext.run();
-    }
+//    void execute()
+//    {
+//        post( ioContext, [this] { accept(); } );
+//        ioContext.run();
+//    }
     
     void accept()
     {
-        auto* clientSession = new ClientSession( ioContext );
-        m_sessions.push_back( clientSession );
-        
-        acceptor.async_accept( clientSession->socket(), [ this, clientSession ] ( boost::system::error_code ec )
+        acceptor.async_accept( m_socket, [this] ( boost::system::error_code ec )
         {
             if ( ec )
             {
@@ -94,6 +92,10 @@ public:
                 exit(-1);
             }
             //std::cout << "Client connected: " << clientSession->socket().remote_endpoint() << std::endl;
+
+            auto* clientSession = new ClientSession( std::move(m_socket) );
+            m_sessions.push_back( clientSession );
+            
             clientSession->readMessage();
 
             accept();
