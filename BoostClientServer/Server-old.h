@@ -39,7 +39,7 @@ public:
                     std::cout << "!!!! ClientSession::sendMessage error: " << ec.message() << std::endl;
                     exit(-1);
                 }
-                //readMessage();
+                readMessage();
             });
     }
 
