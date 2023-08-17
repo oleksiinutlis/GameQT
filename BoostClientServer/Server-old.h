@@ -63,7 +63,7 @@ public:
 
 class TcpServer
 {
-    io_context      ioContext;
+    boost::asio::io_service  ioContext;
     tcp::acceptor   acceptor;
     
     std::vector<ClientSession*> m_sessions;
