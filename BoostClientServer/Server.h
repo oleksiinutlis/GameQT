@@ -1,24 +1,22 @@
 #include <iostream>
 #include <map>
 #include <boost/asio.hpp>
+#include "Common.h"
 
 using namespace boost::asio;
 using ip::tcp;
 
-class IClientSession
-{
-public:
-    virtual void sendMessage( std::string message ) = 0;
-    virtual ~IClientSession() = default;
-};
-
 class ClientSession : public std::enable_shared_from_this<ClientSession>, public IClientSession
 {
+    IGame&                  m_game;
     tcp::socket             m_socket;
     boost::asio::streambuf  m_streambuf;
 
 public:
-    ClientSession(tcp::socket&& socket) : m_socket(std::move(socket)) {}
+    ClientSession( IGame& game, tcp::socket&& socket)
+      : m_game(game),
+        m_socket(std::move(socket))
+    {}
 
     ~ClientSession() { std::cout << "!!!! ~ClientSession()" << std::endl; }
 
@@ -28,7 +26,7 @@ public:
 
         boost::asio::streambuf streambuf;
         std::ostream os(&streambuf);
-        os << command+"\n";
+        os << command;
         
         async_write( m_socket, streambuf,
             [this,self] ( const boost::system::error_code& ec, std::size_t bytes_transferred  )
@@ -55,9 +53,11 @@ public:
                 }
                 else
                 {
-                    std::cout << "Received: " << std::string( (const char*)m_streambuf.data().data(), m_streambuf.size() ) << std::endl;
+                    // handle message
+                    m_game.onPlayerMessage( *this, m_streambuf );
                     m_streambuf.consume(bytes_transferred);
-                    sendMessage( "WaitingSecondPlayer;" );
+
+                    // read next message
                     readMessage();
                 }
         });
@@ -67,6 +67,8 @@ public:
 
 class TcpServer
 {
+    IGame&          m_game;
+    
     io_context      m_ioContext;
     tcp::acceptor   m_acceptor;
     tcp::socket     m_socket;
@@ -74,7 +76,8 @@ class TcpServer
     std::vector<std::shared_ptr<ClientSession>> m_sessions;
 
 public:
-    TcpServer( int port ) :
+    TcpServer( IGame& game, int port ) :
+        m_game(game),
         m_ioContext(),
         m_acceptor( m_ioContext, tcp::endpoint(tcp::v4(), port) ),
         m_socket(m_ioContext)
@@ -93,7 +96,7 @@ public:
         m_acceptor.async_accept(m_socket, [this](boost::system::error_code ec) {
             if (!ec)
             {
-                std::make_shared<ClientSession>(std::move(m_socket))->readMessage();
+                std::make_shared<ClientSession>( m_game, std::move(m_socket) )->readMessage();
             }
 
             accept();

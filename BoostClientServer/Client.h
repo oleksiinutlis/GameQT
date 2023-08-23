@@ -10,8 +10,9 @@ class Client
     io_context  m_ioContext;
     tcp::socket m_socket;
     
+    boost::asio::streambuf m_wrStreambuf;
     boost::asio::streambuf m_streambuf;
-    
+
 public:
     Client() :
         m_ioContext(),
@@ -36,13 +37,13 @@ public:
             }
             else
             {
-                boost::asio::streambuf streambuf;
-                std::ostream os(&streambuf);
+                std::shared_ptr<boost::asio::streambuf> wrStreambuf = std::make_shared<boost::asio::streambuf>();
+                std::ostream os(&(*wrStreambuf));
                 os << greeting+"\n";
 
                 std::cout << "Connected to the server!" << std::endl;
-                async_write( m_socket, streambuf,
-                    [this] ( const boost::system::error_code& error, std::size_t bytes_transferred )
+                async_write( m_socket, *wrStreambuf,
+                    [this,wrStreambuf] ( const boost::system::error_code& error, std::size_t bytes_transferred )
                     {
                         if ( error )
                         {

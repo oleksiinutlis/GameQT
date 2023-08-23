@@ -4,13 +4,16 @@
 
 #include "Client.h"
 #include "Server.h"
+#include "Game.h"
 
 
 int main()
 {
-    std::thread( []
+    Game game;
+    
+    std::thread( [&game]
     {
-        TcpServer server(1234);
+        TcpServer server(game,1234);
         server.execute();
     }).detach();
 

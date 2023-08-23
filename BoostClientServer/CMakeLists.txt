@@ -23,6 +23,6 @@ else()
     set(BOOST_LIB_DIR "C:/Program Files/Boost/boost_1_82_0/libs")
 endif()
 
-add_executable(test test.cpp Client.h Server.h)
+add_executable(test test.cpp Client.h Server.h Common.h Game.h)
 #add_executable(Server server.cpp)
 
