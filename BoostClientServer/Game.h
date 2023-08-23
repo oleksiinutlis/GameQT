@@ -59,31 +59,33 @@ public:
             std::string matchId;
             std::getline( input, matchId, ';');
 
-            auto matchIt = std::find_if( m_matchList.begin(), m_matchList.end(), [&matchId] ( const auto& match ) {
-                return match.m_matchId == matchId;
-            });
-            
-            // Match is created (we have received 'StartGame' message from 2-d player)
-            if ( matchIt != m_matchList.end() )
             {
-                if ( matchIt->m_player1 && matchIt->m_player2 )
-                {
-                    LOG_ERR( "MatchIdTaken" );
-                    client.sendMessage( "MatchIdTaken;\n" );
-                    return;
-                }
-                if ( ! matchIt->m_player1 || matchIt->m_player2 )
-                {
-                    LOG_ERR( "MatchIdInternalError" );
-                    client.sendMessage( "MatchIdInternalError;\n" );
-                    return;
-                }
+                auto matchIt = std::find_if( m_matchList.begin(), m_matchList.end(), [&matchId] ( const auto& match ) {
+                    return match.m_matchId == matchId;
+                });
                 
-                LOG( "message from 2-d player" );
-                matchIt->m_player2.emplace( *matchIt, &client );
-                matchIt->m_player2->m_session->sendMessage( "GameStarded;right;\n" );
-                matchIt->m_player1->m_session->sendMessage( "GameStarded;left;\n" );
-                return;
+                // Match is created (we have received 'StartGame' message from 2-d player)
+                if ( matchIt != m_matchList.end() )
+                {
+                    if ( matchIt->m_player1 && matchIt->m_player2 )
+                    {
+                        LOG_ERR( "MatchIdTaken" );
+                        client.sendMessage( "MatchIdTaken;\n" );
+                        return;
+                    }
+                    if ( ! matchIt->m_player1 || matchIt->m_player2 )
+                    {
+                        LOG_ERR( "MatchIdInternalError" );
+                        client.sendMessage( "MatchIdInternalError;\n" );
+                        return;
+                    }
+                    
+                    LOG( "message from 2-d player" );
+                    matchIt->m_player2.emplace( *matchIt, &client );
+                    matchIt->m_player2->m_session->sendMessage( "GameStarded;right;\n" );
+                    matchIt->m_player1->m_session->sendMessage( "GameStarded;left;\n" );
+                    return;
+                }
             }
             
             // we have received 'StartGame' message from 1-st player
@@ -97,7 +99,8 @@ public:
             }
             
             m_matchList.push_front( Match{matchId} );
-            m_matchList.front().m_player1.emplace( *matchIt, &client );
+            auto& front = m_matchList.front();
+            front.m_player1.emplace( front, &client );
             client.sendMessage( "WaitingSecondPlayer;\n" );
         }
     }
