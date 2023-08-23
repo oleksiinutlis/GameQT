@@ -1,7 +1,7 @@
 #include <iostream>
 #include <map>
 #include <boost/asio.hpp>
-#include "Common.h"
+#include "Interfaces.h"
 
 using namespace boost::asio;
 using ip::tcp;
@@ -54,7 +54,7 @@ public:
                 else
                 {
                     // handle message
-                    m_game.onPlayerMessage( *this, m_streambuf );
+                    m_game.handlePlayerMessage( *this, m_streambuf );
                     m_streambuf.consume(bytes_transferred);
 
                     // read next message

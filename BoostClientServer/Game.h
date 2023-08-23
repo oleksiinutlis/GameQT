@@ -43,7 +43,7 @@ class Game: public IGame
     std::list<Match> m_matchList;
     
 public:
-    virtual void onPlayerMessage( IClientSession& client, boost::asio::streambuf& message ) override
+    virtual void handlePlayerMessage( IClientSession& client, boost::asio::streambuf& message ) override
     {
         LOG( "Received: " << std::string( (const char*)message.data().data(), message.size() ) );
 

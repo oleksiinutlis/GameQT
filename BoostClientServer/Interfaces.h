@@ -19,6 +19,6 @@ protected:
     virtual ~IGame() = default;
 
 public:
-    virtual void onPlayerMessage( IClientSession&, boost::asio::streambuf& message ) = 0;
+    virtual void handlePlayerMessage( IClientSession&, boost::asio::streambuf& message ) = 0;
 };
 
