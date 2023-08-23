@@ -13,6 +13,7 @@ if (APPLE)
     set(BOOST_LIB_DIR "/usr/local/lib")
     set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl")
     set(OPENSSL_LIBRARIES "/usr/local/opt/openssl/lib")
+    add_definitions(-DBOOST_ASIO_HAS_STD_INVOKE_RESULT)
     
     # for -lcrypto (I do not know who uses it!)
     link_directories(/usr/local/opt/openssl/lib)
@@ -23,5 +24,5 @@ else()
 endif()
 
 add_executable(test test.cpp Client.h Server.h)
-add_executable(Server server.cpp)
+#add_executable(Server server.cpp)
 
