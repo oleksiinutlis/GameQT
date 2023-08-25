@@ -7,11 +7,11 @@
 using namespace boost::asio;
 using ip::tcp;
 
-
 class IClientSession
 {
 public:
     virtual void sendMessage( std::string message ) = 0;
+    virtual void sendMessage( std::shared_ptr<boost::asio::streambuf> wrStreambuf ) = 0;
     virtual ~IClientSession() = default;
 };
 

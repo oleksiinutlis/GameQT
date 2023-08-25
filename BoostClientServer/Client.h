@@ -14,10 +14,10 @@ class Client
     boost::asio::streambuf m_streambuf;
 
 public:
-    Client() :
+    Client( IClientPlayer& player ) :
         m_ioContext(),
         m_socket(m_ioContext),
-        m_player(nullptr)
+        m_player(&player)
     {}
     
     ~Client()
@@ -41,24 +41,30 @@ public:
                 std::shared_ptr<boost::asio::streambuf> wrStreambuf = std::make_shared<boost::asio::streambuf>();
                 std::ostream os(&(*wrStreambuf));
                 os << greeting+"\n";
-
-                std::cout << "Connected to the server!" << std::endl;
-                async_write( m_socket, *wrStreambuf,
-                    [this,wrStreambuf] ( const boost::system::error_code& error, std::size_t bytes_transferred )
-                    {
-                        if ( error )
-                        {
-                            std::cout << "Client write error: " << error.message() << std::endl;
-                        }
-                        else
-                        {
-                            readResponse();
-                        }
-                    });
+                
+                sendMessageToServer( wrStreambuf );
             }
         });
 
         m_ioContext.run();
+    }
+    
+    void sendMessageToServer( std::shared_ptr<boost::asio::streambuf> streambuf )
+    {
+        std::cout << "Connected to the server!" << std::endl;
+        async_write( m_socket, *streambuf,
+            [this,streambuf] ( const boost::system::error_code& error, std::size_t bytes_transferred )
+            {
+                if ( error )
+                {
+                    std::cout << "Client write error: " << error.message() << std::endl;
+                }
+                else
+                {
+                    readResponse();
+                }
+            });
+
     }
     
     void readResponse()
