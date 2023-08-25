@@ -22,3 +22,11 @@ public:
     virtual void handlePlayerMessage( IClientSession&, boost::asio::streambuf& message ) = 0;
 };
 
+class IPlayerInterface
+{
+protected:
+    virtual ~IPlayerInterface() = default;
+
+public:
+    virtual void handleServerMessage( boost::asio::streambuf& message ) = 0;
+};

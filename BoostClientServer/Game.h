@@ -37,6 +37,51 @@ public:
     Match( const std::string& matchId ) : m_matchId(matchId) {}
 };
 
+class PlayerInterface : public IPlayerInterface {
+    virtual void handleServerMessage( boost::asio::streambuf& message ) override
+    {
+        LOG("Client: Recieved from server: " << std::string((const char*)message.data().data(), message.size()) << std::endl);
+        std::istringstream input;
+        input.str(std::string((const char*)message.data().data(), message.size()));
+
+        std::string command;
+        std::getline(input, command, ';');
+        if (command == "GameStarted") {
+            std::getline(input, command, ';');
+            if ( command == "left" ) {
+                // TODO : QT->Setposition or something else
+            }
+            else {}// TODO : Qt-> Setposition right
+        }
+        else if (command == "Ball") {
+            std::getline(input, command, ';');
+            int x = std::stoi(command);
+
+            std::getline(input, command, ';');
+            int y = std::stoi(command);
+
+            std::getline(input, command, ';');
+            double dx = std::stod(command);
+
+            std::getline(input, command, ';');
+            int dy = std::stod(command);
+
+            //TODO : QT->CircleWidget.setX etc...
+        }
+        else if (command == "Score") {
+            std::getline(input, command, ';');
+            int firstScore = std::stoi(command);
+
+            std::getline(input, command, ';');
+            int secondScore = std::stoi(command);
+
+            // TODO : Qt -> set score
+            // TODO : Qt -> set x and y to the beginning location
+        }
+
+    }
+};
+
 class Game: public IGame
 {
     std::map<IClientSession*,std::shared_ptr<Match>> m_clientMap;
@@ -45,7 +90,7 @@ class Game: public IGame
 public:
     virtual void handlePlayerMessage( IClientSession& client, boost::asio::streambuf& message ) override
     {
-        LOG( "Received: " << std::string( (const char*)message.data().data(), message.size() ) );
+        LOG( "SERVER: Recieved from client: " << std::string( (const char*)message.data().data(), message.size() ) << std::endl);
 
         std::istringstream input;
         input.str( std::string( (const char*)message.data().data(), message.size() ) );
@@ -82,8 +127,8 @@ public:
                     
                     LOG( "message from 2-d player" );
                     matchIt->m_player2.emplace( *matchIt, &client );
-                    matchIt->m_player2->m_session->sendMessage( "GameStarded;right;\n" );
-                    matchIt->m_player1->m_session->sendMessage( "GameStarded;left;\n" );
+                    matchIt->m_player2->m_session->sendMessage( "GameStarted;right;\n" );
+                    matchIt->m_player1->m_session->sendMessage( "GameStarted;left;\n" );
                     return;
                 }
             }
