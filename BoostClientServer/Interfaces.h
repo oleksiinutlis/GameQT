@@ -2,6 +2,8 @@
 #include <map>
 #include <boost/asio.hpp>
 
+#pragma once
+
 using namespace boost::asio;
 using ip::tcp;
 
@@ -22,10 +24,10 @@ public:
     virtual void handlePlayerMessage( IClientSession&, boost::asio::streambuf& message ) = 0;
 };
 
-class IPlayerInterface
+class IClientPlayer
 {
 protected:
-    virtual ~IPlayerInterface() = default;
+    virtual ~IClientPlayer() = default;
 
 public:
     virtual void handleServerMessage( boost::asio::streambuf& message ) = 0;

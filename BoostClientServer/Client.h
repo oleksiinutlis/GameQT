@@ -1,6 +1,6 @@
 #include <iostream>
 #include <boost/asio.hpp>
-//#include "Interfaces.h"
+#include "Interfaces.h"
 
 using namespace boost::asio;
 using ip::tcp;
@@ -9,15 +9,15 @@ class Client
 {
     io_context  m_ioContext;
     tcp::socket m_socket;
-    //IPlayerInterface* m_player;
+    IClientPlayer* m_player;
     boost::asio::streambuf m_wrStreambuf;
     boost::asio::streambuf m_streambuf;
 
 public:
     Client() :
         m_ioContext(),
-        m_socket(m_ioContext)
-        //m_player(nullptr)
+        m_socket(m_ioContext),
+        m_player(nullptr)
     {}
     
     ~Client()
@@ -81,7 +81,7 @@ public:
                     std::getline( response, command, ';' );
 
                     std::cout << "#CLIENT: RECIEVED FROM SERVER: " << command << std::endl;
-                    //m_player->handleServerMessage(m_streambuf);
+                    m_player->handleServerMessage(m_streambuf);
 
                 }
 

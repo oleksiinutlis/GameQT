@@ -37,7 +37,7 @@ public:
     Match( const std::string& matchId ) : m_matchId(matchId) {}
 };
 
-class PlayerInterface : public IPlayerInterface {
+class ClientPlayer : public IClientPlayer {
     virtual void handleServerMessage( boost::asio::streambuf& message ) override
     {
         LOG("Client: Recieved from server: " << std::string((const char*)message.data().data(), message.size()) << std::endl);
