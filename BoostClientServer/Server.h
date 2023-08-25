@@ -24,12 +24,12 @@ public:
     {
         auto self(shared_from_this());
 
-        boost::asio::streambuf streambuf;
-        std::ostream os(&streambuf);
+        std::shared_ptr<boost::asio::streambuf> wrStreambuf = std::make_shared<boost::asio::streambuf>();
+        std::ostream os(&(*wrStreambuf));
         os << command;
-        
-        async_write( m_socket, streambuf,
-            [this,self] ( const boost::system::error_code& ec, std::size_t bytes_transferred  )
+
+        async_write( m_socket, *wrStreambuf,
+            [this,self,wrStreambuf] ( const boost::system::error_code& ec, std::size_t bytes_transferred  )
             {
                 if ( ec )
                 {
