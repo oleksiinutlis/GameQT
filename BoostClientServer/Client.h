@@ -86,8 +86,8 @@ public:
                     std::string command;
                     std::getline( response, command, ';' );
 
-                    std::cout << "#CLIENT: RECIEVED FROM SERVER: " << command << std::endl;
-                    m_player->handleServerMessage(m_streambuf);
+                    //std::cout << "#CLIENT: RECIEVED FROM SERVER: " << command << std::endl;
+                    m_player->handleServerMessage( command, m_streambuf );
 
                 }
 

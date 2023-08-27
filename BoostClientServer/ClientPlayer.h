@@ -6,11 +6,15 @@ class Client;
 
 class ClientPlayer : public IClientPlayer
 {
+    std::string m_playerName;
+    
     bool m_isLeftPlayer = false;
     
-    Client* m_tcpClient;
+    Client* m_tcpClient = nullptr;
     
 public:
+    ClientPlayer( std::string playerName ) : m_playerName(playerName) {}
+    
     void setTcpClient( Client* tcpClient ) { m_tcpClient = tcpClient; }
     
     void sendBallMessage( double x, double y )
@@ -24,16 +28,18 @@ public:
     
 protected:
     
-    virtual void handleServerMessage( boost::asio::streambuf& message ) override
+    int couner = 0;
+    
+    virtual void handleServerMessage( const std::string& command, boost::asio::streambuf& message ) override
     {
-        LOG("Client: Recieved from server: " << std::string((const char*)message.data().data(), message.size()) << std::endl);
+        LOG("Client: Recieved from server: " << m_playerName << ": " << std::string((const char*)message.data().data(), message.size()) << std::endl);
         std::istringstream input;
         input.str(std::string((const char*)message.data().data(), message.size()));
 
-        std::string command;
-        std::getline(input, command, ';');
-        
-        if (command == "GameStarted")
+        if (command == "WaitingSecondPlayer")
+        {
+        }
+        else if (command == "GameStarted")
         {
             std::string direction;
             std::getline(input, direction, ';');
@@ -57,17 +63,18 @@ protected:
             std::getline(input, number, ';');
             double y = std::stod(number);
             
-            LOG( "Ball: " << this << "  :" << x << " " << y );
+            LOG( "Ball: " << m_playerName << "  :" << x << " " << y );
 
             //TODO : QT->CircleWidget.setX etc...
         }
         else if (command == "Score")
         {
-            std::getline(input, command, ';');
-            int leftScore = std::stoi(command);
+            std::string score;
+            std::getline(input, score, ';');
+            int leftScore = std::stoi(score);
 
-            std::getline(input, command, ';');
-            int rightScore = std::stoi(command);
+            std::getline(input, score, ';');
+            int rightScore = std::stoi(score);
 
             // TODO : Qt -> set score
             // TODO : Qt -> set x and y to the beginning location

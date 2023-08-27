@@ -30,5 +30,5 @@ protected:
     virtual ~IClientPlayer() = default;
 
 public:
-    virtual void handleServerMessage( boost::asio::streambuf& message ) = 0;
+    virtual void handleServerMessage( const std::string& command, boost::asio::streambuf& message ) = 0;
 };
