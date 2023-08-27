@@ -144,7 +144,7 @@ public:
 
             std::shared_ptr<boost::asio::streambuf> wrStreambuf2 = std::make_shared<boost::asio::streambuf>();
             std::ostream os2(&(*wrStreambuf2));
-            //os1 << "Ball;" << int(m_xBall) << ";" << int(m_yBall) << ";\n";
+            os1 << "Ball;" << int(m_xBall) << ";" << int(m_yBall) << ";\n";
 
             m_player2->m_session->sendMessage( wrStreambuf2 );
 
