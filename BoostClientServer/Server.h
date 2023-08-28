@@ -18,7 +18,8 @@ public:
       : m_ioContext(ioContext),
         m_game(game),
         m_socket(std::move(socket))
-    {}
+    {
+    }
 
     ~ClientSession() { std::cout << "!!!! ~ClientSession()" << std::endl; }
 
@@ -78,8 +79,10 @@ class TcpServer
     
     io_context&     m_ioContext;
     tcp::acceptor   m_acceptor;
+    tcp::acceptor   m_acceptor2;
     tcp::socket     m_socket;
-    
+    tcp::socket     m_socket2;
+
     std::vector<std::shared_ptr<ClientSession>> m_sessions;
 
 public:
@@ -87,26 +90,55 @@ public:
         m_game(game),
         m_ioContext(ioContext),
         m_acceptor( m_ioContext, tcp::endpoint(tcp::v4(), port) ),
-        m_socket(m_ioContext)
+        m_acceptor2( m_ioContext, tcp::endpoint(tcp::v4(), port+1) ),
+        m_socket(m_ioContext),
+        m_socket2(m_ioContext)
     {
-        accept();
     }
 
     void execute()
     {
         post( m_ioContext, [this] { accept(); } );
+        post( m_ioContext, [this] { accept2(); } );
         m_ioContext.run();
     }
     
     void accept()
     {
-        m_acceptor.async_accept(m_socket, [this](boost::system::error_code ec) {
+//        m_acceptor.async_accept(m_socket, [this](boost::system::error_code ec) {
+//            if (!ec)
+//            {
+//                std::make_shared<ClientSession>( m_ioContext, m_game, std::move(m_socket) )->readMessage();
+//            }
+//
+//            accept();
+//        });
+        m_acceptor.async_accept( [this] (boost::system::error_code ec, ip::tcp::socket socket ) {
             if (!ec)
             {
-                std::make_shared<ClientSession>( m_ioContext, m_game, std::move(m_socket) )->readMessage();
+                std::make_shared<ClientSession>( m_ioContext, m_game, std::move(socket) )->readMessage();
             }
 
             accept();
+        });
+    }
+    void accept2()
+    {
+//        m_acceptor2.async_accept(m_socket2, [this](boost::system::error_code ec) {
+//            if (!ec)
+//            {
+//                std::make_shared<ClientSession>( m_ioContext, m_game, std::move(m_socket2) )->readMessage();
+//            }
+//
+//            accept2();
+//        });
+        m_acceptor2.async_accept( [this] (boost::system::error_code ec, ip::tcp::socket socket ) {
+            if (!ec)
+            {
+                std::make_shared<ClientSession>( m_ioContext, m_game, std::move(socket) )->readMessage();
+            }
+
+            accept2();
         });
     }
 };

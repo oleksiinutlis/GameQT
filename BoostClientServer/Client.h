@@ -7,15 +7,13 @@ using ip::tcp;
 
 class Client
 {
-    io_context  m_ioContext;
+    io_context&  m_ioContext;
     tcp::socket m_socket;
     IClientPlayer* m_player;
-    boost::asio::streambuf m_wrStreambuf;
-    boost::asio::streambuf m_streambuf;
 
 public:
-    Client( IClientPlayer& player ) :
-        m_ioContext(),
+    Client( io_context&  ioContext, IClientPlayer& player ) :
+        m_ioContext(ioContext),
         m_socket(m_ioContext),
         m_player(&player)
     {}
@@ -27,7 +25,6 @@ public:
     
     void execute( std::string addr, int port, std::string greeting )
     {
-        m_socket = tcp::socket(m_ioContext);
         auto endpoint = tcp::endpoint(ip::address::from_string( addr.c_str()), port);
 
         m_socket.async_connect(endpoint, [this,greeting=greeting] (const boost::system::error_code& error)
@@ -45,8 +42,6 @@ public:
                 sendMessageToServer( wrStreambuf );
             }
         });
-
-        m_ioContext.run();
     }
     
     void sendMessageToServer( std::shared_ptr<boost::asio::streambuf> streambuf )
@@ -71,8 +66,10 @@ public:
     {
         // Receive the response from the server
 
-        boost::asio::async_read_until( m_socket, m_streambuf, '\n',
-          [this]( const boost::system::error_code& error_code, std::size_t bytes_transferred )
+        std::shared_ptr<boost::asio::streambuf> streambuf = std::make_shared<boost::asio::streambuf>();
+
+        boost::asio::async_read_until( m_socket, *streambuf, '\n',
+          [streambuf,this]( const boost::system::error_code& error_code, std::size_t bytes_transferred )
         {
             if ( error_code )
             {
@@ -81,17 +78,17 @@ public:
             else
             {
                 {
-                    std::istream response( &m_streambuf );
+                    std::istream response( &(*streambuf) );
 
                     std::string command;
                     std::getline( response, command, ';' );
 
-                    //std::cout << "#CLIENT: RECIEVED FROM SERVER: " << command << std::endl;
-                    m_player->handleServerMessage( command, m_streambuf );
+                    //std::cout << "#CLIENT: " << m_player->playerName() << ": FROM SERVER: " << command << std::endl;
+                    m_player->handleServerMessage( command, *streambuf );
 
                 }
 
-                m_streambuf.consume(bytes_transferred);
+                streambuf->consume(bytes_transferred);
                 readResponse();
             }
         });

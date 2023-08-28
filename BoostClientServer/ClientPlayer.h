@@ -15,6 +15,8 @@ class ClientPlayer : public IClientPlayer
 public:
     ClientPlayer( std::string playerName ) : m_playerName(playerName) {}
     
+    const std::string& playerName() const override { return m_playerName; }
+
     void setTcpClient( Client* tcpClient ) { m_tcpClient = tcpClient; }
     
     void sendBallMessage( double x, double y )
@@ -28,11 +30,11 @@ public:
     
 protected:
     
-    int couner = 0;
+    int counter = 0;
     
     virtual void handleServerMessage( const std::string& command, boost::asio::streambuf& message ) override
     {
-        LOG("Client: Recieved from server: " << m_playerName << ": " << std::string((const char*)message.data().data(), message.size()) << std::endl);
+        LOG("Client: Recieved from server: " << m_playerName << ": " << command << " " << std::string((const char*)message.data().data(), message.size()-1) );
         std::istringstream input;
         input.str(std::string((const char*)message.data().data(), message.size()));
 
@@ -63,7 +65,7 @@ protected:
             std::getline(input, number, ';');
             double y = std::stod(number);
             
-            LOG( "Ball: " << m_playerName << "  :" << x << " " << y );
+            LOG( "Ball: " << ++counter << ": " << m_playerName << "  :" << x << " " << y << "\n" );
 
             //TODO : QT->CircleWidget.setX etc...
         }

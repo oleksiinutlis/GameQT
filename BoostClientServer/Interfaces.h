@@ -31,4 +31,5 @@ protected:
 
 public:
     virtual void handleServerMessage( const std::string& command, boost::asio::streambuf& message ) = 0;
+    virtual const std::string& playerName() const = 0;
 };

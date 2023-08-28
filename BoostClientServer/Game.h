@@ -25,7 +25,9 @@ struct Player
     int             m_width;
     int             m_height;
 
-    Player( Match& match, IClientSession* session, int width, int height ) : m_match(match), m_session(session), m_width(width), m_height(height) {}
+    Player( Match& match, IClientSession* session, int width, int height ) : m_match(match), m_session(session), m_width(width), m_height(height) {
+        
+    }
 };
 
 class Match
@@ -98,31 +100,30 @@ public:
         });
     }
     
-    int counter = 0;
     int startCounter = 0;
+    const int skipNumber = 1;
 
     void tick()
     {
-        if ( ++counter < 10 )
-        {
-            tick();
-            return;
-        }
-        else if ( counter == 10 )
-        {
-            m_lastTimestamp = std::chrono::high_resolution_clock::now();
-            tick();
-            return;
-        }
-        
-        if (counter>10+100)
-        {
-            exit(0);
-        }
-        
         m_timer.expires_after( std::chrono::milliseconds( 30 ));
         m_timer.async_wait([this](const boost::system::error_code& ec )
         {
+            if ( ++startCounter < skipNumber )
+            {
+                tick();
+                return;
+            }
+            else if ( startCounter == skipNumber )
+            {
+                m_lastTimestamp = std::chrono::high_resolution_clock::now();
+                tick();
+                return;
+            }
+            else if ( startCounter > skipNumber+100 )
+            {
+                exit(0);
+            }
+            
             if ( ec )
             {
                 LOG( "Timer error:" << ec.message() );
@@ -132,22 +133,26 @@ public:
             auto durationMs = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_lastTimestamp);
             m_lastTimestamp = std::chrono::high_resolution_clock::now();
 
-            LOG( "duration: " << durationMs.count() );
+            //LOG( "duration: " << durationMs.count() );
             m_xBall = m_xBall + m_dx*(durationMs.count()/30000.0);
             m_yBall = m_yBall + m_dy*(durationMs.count()/30000.0);
+
+            {
+                std::shared_ptr<boost::asio::streambuf> wrStreambuf1 = std::make_shared<boost::asio::streambuf>();
+                std::ostream os1(&(*wrStreambuf1));
+                os1 << "Ball;" << int(m_xBall) << ";" << int(m_yBall) << ";\n";
+                
+                m_player1->m_session->sendMessage( wrStreambuf1 );
+            }
+
+            {
+                std::shared_ptr<boost::asio::streambuf> wrStreambuf2 = std::make_shared<boost::asio::streambuf>();
+                std::ostream os2(&(*wrStreambuf2));
+                os2 << "Ball;" << int(m_xBall) << ";" << int(m_yBall) << ";\n";
+                
+                m_player2->m_session->sendMessage( wrStreambuf2 );
+            }
             
-            std::shared_ptr<boost::asio::streambuf> wrStreambuf1 = std::make_shared<boost::asio::streambuf>();
-            std::ostream os1(&(*wrStreambuf1));
-            os1 << "Ball;" << int(m_xBall) << ";" << int(m_yBall) << ";\n";
-
-            m_player1->m_session->sendMessage( wrStreambuf1 );
-
-            std::shared_ptr<boost::asio::streambuf> wrStreambuf2 = std::make_shared<boost::asio::streambuf>();
-            std::ostream os2(&(*wrStreambuf2));
-            os1 << "Ball;" << int(m_xBall) << ";" << int(m_yBall) << ";\n";
-
-            m_player2->m_session->sendMessage( wrStreambuf2 );
-
             tick();
         });
     }
