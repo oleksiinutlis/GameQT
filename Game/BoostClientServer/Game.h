@@ -119,7 +119,7 @@ public:
                 tick();
                 return;
             }
-            else if ( startCounter > skipNumber+100 )
+            else if ( startCounter > skipNumber+1000 )
             {
                 exit(0);
             }

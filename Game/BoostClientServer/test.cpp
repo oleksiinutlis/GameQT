@@ -7,8 +7,6 @@
 #include "Game.h"
 #include "ClientPlayer.h"
 
-
-
 int main()
 {
     // server

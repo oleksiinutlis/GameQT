@@ -2,7 +2,7 @@
 #include <boost/asio.hpp>
 #include "Interfaces.h"
 
-class Client;
+class TcpClient;
 
 class ClientPlayer : public IClientPlayer
 {
@@ -10,14 +10,14 @@ class ClientPlayer : public IClientPlayer
     
     bool m_isLeftPlayer = false;
     
-    Client* m_tcpClient = nullptr;
+    TcpClient* m_tcpClient = nullptr;
     
 public:
     ClientPlayer( std::string playerName ) : m_playerName(playerName) {}
     
     const std::string& playerName() const override { return m_playerName; }
 
-    void setTcpClient( Client* tcpClient ) { m_tcpClient = tcpClient; }
+    void setTcpClient( TcpClient* tcpClient ) { m_tcpClient = tcpClient; }
     
     void sendBallMessage( double x, double y )
     {
