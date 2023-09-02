@@ -4,6 +4,9 @@
 
 #pragma once
 
+#define GAME_STARTED_CMD    "GameStarted"
+#define UPDATE_SCENE_CMD    "UpdateScene"
+
 using namespace boost::asio;
 using ip::tcp;
 

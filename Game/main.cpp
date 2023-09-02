@@ -53,14 +53,13 @@ int main(int argc, char *argv[])
         ioContext.run();
     }).detach();
 
-    std::thread( []
+    std::thread( [&scene]
     {
-        ClientPlayer player2{"player2"};
-        //QtClientPlayer player2{"player2",scene};
+        QtClientPlayer player2{scene};
 
         io_context  ioContext2;
         TcpClient client2( ioContext2, player2 );
-        player2.setTcpClient(&client2);
+        //player2.setTcpClient(&client2);
         client2.execute( "127.0.0.1", 1234, "StartGame;001;1000;800;" );
         
         ioContext2.run();

@@ -41,7 +41,7 @@ protected:
         if (command == "WaitingSecondPlayer")
         {
         }
-        else if (command == "GameStarted")
+        else if (command == GAME_STARTED_CMD)
         {
             std::string direction;
             std::getline(input, direction, ';');
@@ -55,7 +55,7 @@ protected:
             }
             //TODO
         }
-        else if (command == "Ball")
+        else if (command == UPDATE_SCENE_CMD)
         {
             std::string number;
 

@@ -65,8 +65,8 @@ public:
     double m_x2Player;
     double m_y2Player;
     
-    double m_ballRadius;
-    double m_playerRadius;
+    double m_ballRadius = 15;
+    double m_playerRadius = 50;
     
     void init( int width, int height )
     {
@@ -80,6 +80,12 @@ public:
         m_yBall = m_height/2.0;
         m_dx = 3;
         m_dy = 1;
+
+        m_x1Player = 2*m_playerRadius;
+        m_y1Player = m_height/2;
+        
+        m_x2Player = m_width - 2*m_playerRadius;
+        m_y2Player = m_height/2;
     }
 
     std::chrono::time_point<std::chrono::high_resolution_clock> m_lastTimestamp;
@@ -133,28 +139,46 @@ public:
             auto durationMs = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_lastTimestamp);
             m_lastTimestamp = std::chrono::high_resolution_clock::now();
 
-            //LOG( "duration: " << durationMs.count() );
-            m_xBall = m_xBall + m_dx*(durationMs.count()/30000.0);
-            m_yBall = m_yBall + m_dy*(durationMs.count()/30000.0);
-
-            {
-                std::shared_ptr<boost::asio::streambuf> wrStreambuf1 = std::make_shared<boost::asio::streambuf>();
-                std::ostream os1(&(*wrStreambuf1));
-                os1 << "Ball;" << int(m_xBall) << ";" << int(m_yBall) << ";\n";
-                
-                m_player1->m_session->sendMessage( wrStreambuf1 );
-            }
-
-            {
-                std::shared_ptr<boost::asio::streambuf> wrStreambuf2 = std::make_shared<boost::asio::streambuf>();
-                std::ostream os2(&(*wrStreambuf2));
-                os2 << "Ball;" << int(m_xBall) << ";" << int(m_yBall) << ";\n";
-                
-                m_player2->m_session->sendMessage( wrStreambuf2 );
-            }
-            
+            calculateScene( durationMs.count()/30000.0 );
             tick();
         });
+    }
+    
+    void calculateScene( double deltaTime )
+    {
+        m_xBall = m_xBall + m_dx*deltaTime;
+        m_yBall = m_yBall + m_dy*deltaTime;
+
+        //
+        
+        sendUpdateScene();
+    }
+    
+    void sendUpdateScene()
+    {
+        {
+            std::shared_ptr<boost::asio::streambuf> wrStreambuf1 = std::make_shared<boost::asio::streambuf>();
+            std::ostream os1(&(*wrStreambuf1));
+            os1 << UPDATE_SCENE_CMD ";"
+                << int(m_xBall) << ";" << int(m_yBall) << ";"
+                << int(m_x1Player) << ";" << int(m_y1Player) << ";"
+                << int(m_x2Player) << ";" << int(m_y2Player) << ";"
+                << int(m_ballRadius) << ";" << int(m_playerRadius) << ";\n";
+
+            m_player1->m_session->sendMessage( wrStreambuf1 );
+        }
+
+        {
+            std::shared_ptr<boost::asio::streambuf> wrStreambuf2 = std::make_shared<boost::asio::streambuf>();
+            std::ostream os2(&(*wrStreambuf2));
+            os2 << UPDATE_SCENE_CMD ";"
+                << int(m_xBall) << ";" << int(m_yBall) << ";"
+                << int(m_x1Player) << ";" << int(m_y1Player) << ";"
+                << int(m_x2Player) << ";" << int(m_y2Player) << ";"
+                << int(m_ballRadius) << ";" << int(m_playerRadius) << ";\n";
+
+            m_player2->m_session->sendMessage( wrStreambuf2 );
+        }
     }
 };
 
@@ -227,13 +251,13 @@ public:
                     
                     std::shared_ptr<boost::asio::streambuf> wrStreambuf1 = std::make_shared<boost::asio::streambuf>();
                     std::ostream os1(&(*wrStreambuf1));
-                    os1 << "GameStarted;right;" << minWidth << ";" << minHeight << ";\n";
+                    os1 << GAME_STARTED_CMD ";right;" << minWidth << ";" << minHeight << ";\n";
 
                     matchIt->m_player2->m_session->sendMessage( wrStreambuf1 );
 
                     std::shared_ptr<boost::asio::streambuf> wrStreambuf2 = std::make_shared<boost::asio::streambuf>();
                     std::ostream os2(&(*wrStreambuf2));
-                    os2 << "GameStarted;left;" << minWidth << ";" << minHeight << ";\n";
+                    os2 << GAME_STARTED_CMD ";left;" << minWidth << ";" << minHeight << ";\n";
 
                     matchIt->m_player1->m_session->sendMessage( wrStreambuf2 );
 

@@ -16,10 +16,11 @@ class Scene : public QWidget
     MainWindow& m_mainWindow;
     
     QPoint m_ballPos;
-    QPoint m_ellipsePos;
+    QPoint m_1playerPos;
+    QPoint m_2playerPos;
 
     int m_radius = 15;
-    int m_ellipseRadius = 50;
+    int m_playerRadius = 50;
 
 signals:
     void updateSignal();
@@ -40,9 +41,22 @@ public:
         m_mainWindow.show();
     }
     
-    void updateScene( QPoint ballPos )
+    QSize setSceneSize( double width, double height )
     {
-        m_ballPos = ballPos;
+        QMetaObject::invokeMethod( this, [=,this] { m_mainWindow.resize( width, height ); }, Qt::QueuedConnection);
+    }
+    
+    void draw( double x, double y, double xPlayer1, double yPlayer1, double xPlayer2, double yPlayer2, double ballRadius, double playerRadius )
+    {
+        m_ballPos.setX( x );
+        m_ballPos.setY( y );
+        m_1playerPos.setX( xPlayer1 );
+        m_1playerPos.setY( yPlayer1 );
+        m_2playerPos.setX( xPlayer2 );
+        m_2playerPos.setY( yPlayer2 );
+        m_radius = ballRadius;
+        m_playerRadius = playerRadius;
+
         emit updateSignal();
     }
     
@@ -58,7 +72,10 @@ protected:
         painter.drawRect(0, 0, width(), height());
 
         painter.setBrush(Qt::red);
-        painter.drawEllipse( m_ellipsePos.x(), m_ellipsePos.y(), m_ellipseRadius*2, m_ellipseRadius*2 );
+        painter.drawEllipse( m_1playerPos.x(), m_1playerPos.y(), m_playerRadius*2, m_playerRadius*2 );
+
+        painter.setBrush(Qt::red);
+        painter.drawEllipse( m_2playerPos.x(), m_2playerPos.y(), m_playerRadius*2, m_playerRadius*2 );
 
         painter.setBrush(Qt::blue);
         painter.drawEllipse( m_ballPos.x(), m_ballPos.y(), m_radius*2, m_radius*2);
