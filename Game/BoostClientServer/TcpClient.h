@@ -5,20 +5,20 @@
 using namespace boost::asio;
 using ip::tcp;
 
-class Client
+class TcpClient
 {
     io_context&  m_ioContext;
     tcp::socket m_socket;
     IClientPlayer* m_player;
 
 public:
-    Client( io_context&  ioContext, IClientPlayer& player ) :
+    TcpClient( io_context&  ioContext, IClientPlayer& player ) :
         m_ioContext(ioContext),
         m_socket(m_ioContext),
         m_player(&player)
     {}
     
-    ~Client()
+    ~TcpClient()
     {
         std::cout << "!!!! ~Client(): " << std::endl;
     }

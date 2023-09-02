@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (APPLE)
     include_directories(SYSTEM /usr/local/include)
-    set(CMAKE_PREFIX_PATH "~/Qt/6.2.4/macos")
     set(CMAKE_PREFIX_PATH "~/Qt/6.4.0/macos")
     set(BOOST_INCLUDE_DIR "/usr/local/include")
     set(BOOST_LIB_DIR "/usr/local/lib")
