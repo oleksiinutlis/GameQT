@@ -68,6 +68,8 @@ public:
     double m_ballRadius = 15;
     double m_playerRadius = 50;
     
+    bool   m_isIntersected = false;
+    
     void init( int width, int height )
     {
         m_width = width;
@@ -146,10 +148,91 @@ public:
     
     void calculateScene( double deltaTime )
     {
+        auto x1PlayerCenter = m_x1Player + m_playerRadius;
+        auto y1PlayerCenter = m_y1Player + m_playerRadius;
+
+        auto x2PlayerCenter = m_x2Player + m_playerRadius;
+        auto y2PlayerCenter = m_y2Player + m_playerRadius;
+
+        auto xBallCenter = m_xBall + m_ballRadius;
+        auto yBallCenter = m_yBall + m_ballRadius;
+
+        auto realX = xBallCenter;
+        auto realY = yBallCenter;
+
+        auto realX2 = x1PlayerCenter;
+        auto realY2 = y1PlayerCenter;
+
+        auto ellipseRadius = m_playerRadius;
+        auto radius = m_ballRadius;
+
+        auto& dx = m_dx;
+        auto& dy = m_dy;
+
+        auto& x = m_xBall;
+        auto& y = m_yBall;
+
+
+        if ((realX - realX2) * (realX - realX2) + (realY - realY2) * (realY - realY2) > (radius + ellipseRadius) * (radius + ellipseRadius))
+        {
+            if (x + dx > m_width - radius || x + dx < 0) {
+                dx = -dx;
+            }
+            if (y + dy > m_height - radius || y + dy < 0) {
+                dy = -dy;
+            }
+
+            if ( m_isIntersected )
+            {
+                static int counter = 0;
+                std::cout << "--" << counter++ << "\n";
+
+                m_isIntersected = false;
+            }
+        }
+        else if ( !m_isIntersected )
+        {
+            // intersected
+
+            // rotate 180
+            double rDx = -dx;
+            double rDy = -dy;
+
+            // get 2-d axis
+            double x2 = realX - realX2;
+            double y2 = realY - realY2;
+
+            // calculate cos(fi) and sin(Fi)
+            double cosFi = (rDx * x2 + rDy * y2) / sqrt((rDx * rDx + rDy * rDy) * (x2 * x2 + y2 * y2));
+            double sinFi = sqrt(1 - cosFi * cosFi);
+
+            // do rotation
+            double dxRotated = cosFi * rDx - sinFi * rDy;
+            double dyRotated = sinFi * rDx + cosFi * rDy;
+
+            // test direction
+            double testCosFi = (dxRotated * dyRotated + x2 * y2) / sqrt((dxRotated * dxRotated + dyRotated * dyRotated) * (x2 * x2 + y2 * y2));
+
+            if (testCosFi < cosFi)
+            {
+                dx = cosFi * dxRotated - sinFi * dyRotated;
+                dy = sinFi * dxRotated + cosFi * dyRotated;
+            }
+            else
+            {
+                dxRotated = cosFi * rDx + sinFi * rDy;
+                dyRotated = -sinFi * rDx + cosFi * rDy;
+                dx = cosFi * dxRotated + sinFi * dyRotated;
+                dy = -sinFi * dxRotated + cosFi * dyRotated;
+            }
+
+            std::cout << "isIntersected" << "\n";
+            m_isIntersected = true;
+        }
+
         m_xBall = m_xBall + m_dx*deltaTime;
         m_yBall = m_yBall + m_dy*deltaTime;
 
-        //
         
         sendUpdateScene();
     }
@@ -203,7 +286,7 @@ public:
         std::string command;
         std::getline( input, command, ';');
         
-        if ( command == "StartGame" )
+        if ( command == START_GAME_CMD )
         {
             // Get 'MatchId'
             std::string matchId;
@@ -281,6 +364,23 @@ public:
             front.m_player1.emplace( front, &client, width, height );
             client.sendMessage( "WaitingSecondPlayer;\n" );
         }
+        else if ( command == CLIENT_POSITION_CMD )
+        {
+            // Get mouse 'x'
+            {
+                std::string xStr;
+                std::getline( input, xStr, ';');
+                int mouseX = std::stoi(xStr);
+            }
+
+            // Get mouse 'y'
+            {
+                std::string yStr;
+                std::getline( input, yStr, ';');
+                int mouseY = std::stoi(yStr);
+            }
+        }
+
     }
 
 };

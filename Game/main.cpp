@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
                 TcpClient client1(ioContext, player1);
                 player1.setTcpClient(&client1);
-                client1.execute("127.0.0.1", 1235, "StartGame;001;800;600;");
+                client1.execute("127.0.0.1", 1235, START_GAME_CMD ";001;800;600;");
 
                 ioContext.run();
             }).detach();
@@ -59,8 +59,8 @@ int main(int argc, char* argv[])
 
                     io_context  ioContext2;
                     TcpClient client2(ioContext2, player2);
-                    //player2.setTcpClient(&client2);
-                    client2.execute("127.0.0.1", 1234, "StartGame;001;1000;800;");
+                    player2.setTcpClient(&client2);
+                    client2.execute("127.0.0.1", 1234, START_GAME_CMD ";001;1000;800;");
 
                     ioContext2.run();
                 }).detach();

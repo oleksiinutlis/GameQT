@@ -8,12 +8,15 @@
 #include <QMouseEvent>
 
 #include "mainwindow.h"
+#include "BoostClientServer/Interfaces.h"
 
 class Scene : public QWidget
 {
     Q_OBJECT
 
-        MainWindow& m_mainWindow;
+    MainWindow& m_mainWindow;
+    
+    IMouseEventHandler* m_mouseEventHandler = nullptr;
 
     QPoint m_ballPos;
     QPoint m_1playerPos;
@@ -31,19 +34,27 @@ public:
         connect(this, &Scene::updateSignal, this, QOverload<>::of(&Scene::update));
     }
 
+    void setMouseEventHandler( IMouseEventHandler* mouseEventHandler ) { m_mouseEventHandler = mouseEventHandler; }
+
     void init()
     {
         m_mainWindow.resize(1200, 600);
 
         m_mainWindow.centralWidget()->setLayout(new QVBoxLayout);
         m_mainWindow.centralWidget()->layout()->addWidget(this);
+        
 
         m_mainWindow.show();
     }
 
     void setSceneSize(double width, double height)
     {
-        QMetaObject::invokeMethod(this, [=, this] { m_mainWindow.resize(width, height); }, Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, [=, this]
+        {
+            m_mainWindow.resize( width, height );
+            QSize sz = m_mainWindow.centralWidget()->size();
+            m_mainWindow.resize( width+100, height+height-sz.height() );
+        }, Qt::QueuedConnection);
     }
 
     void draw(double x, double y, double xPlayer1, double yPlayer1, double xPlayer2, double yPlayer2, double ballRadius, double playerRadius)
@@ -82,6 +93,10 @@ protected:
     }
 
     void mousePressEvent(QMouseEvent* event) override {
+        if ( m_mouseEventHandler )
+        {
+            m_mouseEventHandler->mousePressEvent(event);
+        }
         //        calculateScene();
         //        if (event->button() == Qt::LeftButton) {
         //            isMousePressed = true;
@@ -89,6 +104,10 @@ protected:
     }
 
     void mouseMoveEvent(QMouseEvent* event) override {
+        if ( m_mouseEventHandler )
+        {
+            m_mouseEventHandler->mouseMoveEvent(event);
+        }
         //        calculateScene();
         //        if (isMousePressed) {
         //            ellipsePos.setX( event->pos().x() - ellipseRadius );
@@ -98,6 +117,10 @@ protected:
     }
 
     void mouseReleaseEvent(QMouseEvent* event) override {
+        if ( m_mouseEventHandler )
+        {
+            m_mouseEventHandler->mouseReleaseEvent(event);
+        }
         //        calculateScene();
         //        if (event->button() == Qt::LeftButton) {
         //            isMousePressed = false;
