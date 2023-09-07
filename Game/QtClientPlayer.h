@@ -17,7 +17,7 @@
 
 class QtClientPlayer : public IClientPlayer
 {
-    Scene&      m_scene;
+    Scene& m_scene;
     bool        m_isLeftPlayer;
     double      m_xRatio;
     double      m_yRatio;
@@ -25,12 +25,12 @@ class QtClientPlayer : public IClientPlayer
     std::string m_playerName = "QtClientPlayer";
 
 public:
-    QtClientPlayer( Scene& scene ) : m_scene(scene) {}
-    
-    virtual void handleServerMessage( const std::string& command, boost::asio::streambuf& message ) override
+    QtClientPlayer(Scene& scene) : m_scene(scene) {}
+
+    virtual void handleServerMessage(const std::string& command, boost::asio::streambuf& message) override
     {
-        LOG( "QtClientPlayer: Recieved from server: " << m_playerName << ": " << command << " " << std::string((const char*)message.data().data(), message.size()-1) );
-        
+        LOG("QtClientPlayer: Recieved from server: " << m_playerName << ": " << command << " " << std::string((const char*)message.data().data(), message.size() - 1));
+
         std::istringstream input;
         input.str(std::string((const char*)message.data().data(), message.size()));
 
@@ -41,8 +41,8 @@ public:
         {
             std::string direction;
             std::getline(input, direction, ';');
-            
-            if ( command == "left" )
+
+            if (command == "left")
             {
                 m_isLeftPlayer = true;
             }
@@ -59,7 +59,7 @@ public:
             std::getline(input, heightStr, ';');
             double height = std::stod(heightStr);
 
-            m_scene.setSceneSize( width, height );
+            m_scene.setSceneSize(width, height);
         }
         else if (command == UPDATE_SCENE_CMD)
         {
@@ -70,11 +70,11 @@ public:
 
             std::getline(input, number, ';');
             double y = std::stod(number);
-            
-//            << int(m_x1Player) << ";" << int(m_y1Player) << ";"
-//            << int(m_x2Player) << ";" << int(m_y2Player) << ";"
-//            << int(m_ballRadius) << ";" << int(m_playerRadius) << ";\n"
-            
+
+            //            << int(m_x1Player) << ";" << int(m_y1Player) << ";"
+            //            << int(m_x2Player) << ";" << int(m_y2Player) << ";"
+            //            << int(m_ballRadius) << ";" << int(m_playerRadius) << ";\n"
+
             std::getline(input, number, ';');
             double x1Player = std::stod(number);
 
@@ -94,8 +94,8 @@ public:
             double playerRadius = std::stod(number);
 
             //LOG( UPDATE_SCENE_CMD ": " << m_playerName << "  :" << x << " " << y << "\n" );
-            
-            m_scene.draw( x, y, x1Player, y1Player, x2Player, y2Player,  ballRadius, playerRadius );
+
+            m_scene.draw(x, y, x1Player, y1Player, x2Player, y2Player, ballRadius, playerRadius);
         }
         else if (command == "Score")
         {
@@ -110,6 +110,6 @@ public:
             // TODO : Qt -> set x and y to the beginning location
         }
     }
-    
+
     virtual const std::string& playerName() const override { return m_playerName; }
 };
