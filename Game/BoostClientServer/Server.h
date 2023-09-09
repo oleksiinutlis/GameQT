@@ -12,6 +12,8 @@ class ClientSession : public std::enable_shared_from_this<ClientSession>, public
     IGame&                  m_game;
     tcp::socket             m_socket;
     boost::asio::streambuf  m_streambuf;
+    
+    std::weak_ptr<IClientSessionUserData> m_userInfoPtr;
 
 public:
     ClientSession( io_context& ioContext, IGame& game, tcp::socket&& socket)
@@ -22,6 +24,9 @@ public:
     }
 
     ~ClientSession() { std::cout << "!!!! ~ClientSession()" << std::endl; }
+    
+    virtual void  setUserInfoPtr( std::weak_ptr<IClientSessionUserData> userInfoPtr ) override { m_userInfoPtr = userInfoPtr; }
+    virtual std::weak_ptr<IClientSessionUserData> getUserInfoPtr() override { return m_userInfoPtr; }
 
     virtual void sendMessage( std::string command ) override
     {

@@ -15,12 +15,22 @@
 using namespace boost::asio;
 using ip::tcp;
 
+class IClientSessionUserData
+{
+protected:
+    virtual ~IClientSessionUserData() = default;
+};
+
 class IClientSession
 {
 public:
+    virtual ~IClientSession() = default;
+
     virtual void sendMessage( std::string message ) = 0;
     virtual void sendMessage( std::shared_ptr<boost::asio::streambuf> wrStreambuf ) = 0;
-    virtual ~IClientSession() = default;
+
+    virtual void  setUserInfoPtr( std::weak_ptr<IClientSessionUserData> userInfoPtr ) = 0;
+    virtual std::weak_ptr<IClientSessionUserData> getUserInfoPtr() = 0;
 };
 
 class IGame

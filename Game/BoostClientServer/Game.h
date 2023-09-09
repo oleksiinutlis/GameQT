@@ -17,7 +17,7 @@
 
 class Match;
 
-struct Player
+struct Player: public IClientSessionUserData
 {
     Match&          m_match;
     IClientSession* m_session;
@@ -37,8 +37,8 @@ class Match
 public:
     const std::string       m_matchId;
 
-    std::optional<Player>   m_player1;
-    std::optional<Player>   m_player2;
+    std::shared_ptr<Player>   m_player1;
+    std::shared_ptr<Player>   m_player2;
 
 private:
     boost::asio::high_resolution_timer m_timer;
@@ -89,6 +89,25 @@ public:
         m_x2Player = m_width - 2*m_playerRadius;
         m_y2Player = m_height/2;
     }
+    
+    void onClientPositionChanged( Player* player, int x, int y )
+    {
+        if ( player == m_player1.get() )
+        {
+            m_x1Player = x;
+            m_y1Player = y;
+        }
+        else if ( player == m_player2.get() )
+        {
+            m_x2Player = x;
+            m_y2Player = y;
+        }
+        else
+        {
+            LOG_ERR( "Unknown player pointer!" );
+            exit(0);
+        }
+    }
 
     std::chrono::time_point<std::chrono::high_resolution_clock> m_lastTimestamp;
     
@@ -127,10 +146,10 @@ public:
                 tick();
                 return;
             }
-            else if ( startCounter > skipNumber+1000 )
-            {
-                exit(0);
-            }
+//            else if ( startCounter > skipNumber+1000 )
+//            {
+//                exit(0);
+//            }
             
             if ( ec )
             {
@@ -330,7 +349,7 @@ public:
                     
                     matchIt->m_player1->m_match.init( minWidth, minHeight );
                     
-                    matchIt->m_player2.emplace( *matchIt, &client, minWidth, minHeight );
+                    matchIt->m_player2 = std::make_shared<Player>( *matchIt, &client, minWidth, minHeight );
                     
                     std::shared_ptr<boost::asio::streambuf> wrStreambuf1 = std::make_shared<boost::asio::streambuf>();
                     std::ostream os1(&(*wrStreambuf1));
@@ -343,6 +362,8 @@ public:
                     os2 << GAME_STARTED_CMD ";left;" << minWidth << ";" << minHeight << ";\n";
 
                     matchIt->m_player1->m_session->sendMessage( wrStreambuf2 );
+                    auto base = std::dynamic_pointer_cast<IClientSessionUserData>( matchIt->m_player1 );
+                    client.setUserInfoPtr( std::weak_ptr<IClientSessionUserData>( base ) );
 
                     matchIt->m_player1->m_match.start();
                     return;
@@ -361,26 +382,29 @@ public:
             
             m_matchList.emplace_front( m_serverIoContext, matchId );
             auto& front = m_matchList.front();
-            front.m_player1.emplace( front, &client, width, height );
+            front.m_player1 = std::make_shared<Player>( front, &client, width, height );
             client.sendMessage( "WaitingSecondPlayer;\n" );
+            
+            auto base = std::dynamic_pointer_cast<IClientSessionUserData>( front.m_player1 );
+            client.setUserInfoPtr( std::weak_ptr<IClientSessionUserData>( base ) );
         }
         else if ( command == CLIENT_POSITION_CMD )
         {
             // Get mouse 'x'
-            {
-                std::string xStr;
-                std::getline( input, xStr, ';');
-                int mouseX = std::stoi(xStr);
-            }
+            std::string xStr;
+            std::getline( input, xStr, ';');
+            int mouseX = std::stoi(xStr);
 
             // Get mouse 'y'
+            std::string yStr;
+            std::getline( input, yStr, ';');
+            int mouseY = std::stoi(yStr);
+            
+            if ( auto ptr = client.getUserInfoPtr().lock(); ptr )
             {
-                std::string yStr;
-                std::getline( input, yStr, ';');
-                int mouseY = std::stoi(yStr);
+                auto player = std::dynamic_pointer_cast<Player>( ptr );
+                player->m_match.onClientPositionChanged( player.get(), mouseX, mouseY );
             }
         }
-
     }
-
 };
