@@ -18,6 +18,7 @@ class Scene : public QWidget
     
     IMouseEventHandler* m_mouseEventHandler = nullptr;
 
+    QSize  m_size;
     QPoint m_ballPos;
     QPoint m_1playerPos;
     QPoint m_2playerPos;
@@ -51,9 +52,11 @@ public:
     {
         QMetaObject::invokeMethod(this, [=, this]
         {
+            m_size.setWidth( width );
+            m_size.setHeight( height );
             m_mainWindow.resize( width, height );
             QSize sz = m_mainWindow.centralWidget()->size();
-            m_mainWindow.resize( width+100, height+height-sz.height() );
+            m_mainWindow.resize( width+100, height+height-sz.height()+100 );
         }, Qt::QueuedConnection);
     }
 
@@ -79,8 +82,8 @@ protected:
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing, true);
 
-        painter.setBrush(Qt::lightGray);
-        painter.drawRect(0, 0, width(), height());
+        painter.setBrush(Qt::darkGreen);
+        painter.drawRect( 0, 0, m_size.width(), m_size.height() );
 
         painter.setBrush(Qt::red);
         painter.drawEllipse(m_1playerPos.x(), m_1playerPos.y(), m_playerRadius * 2, m_playerRadius * 2);

@@ -4,11 +4,73 @@
 
 class TcpClient;
 
-class ClientPlayer : public IClientPlayer
+class VirtualScene
+{
+protected:
+    bool m_isLeftPlayer = false;
+
+    int m_width;
+    int m_height;
+
+    // Ball
+    int m_x;
+    int m_y;
+
+    int m_dx;
+    int m_dy;
+
+    double m_playerX;
+    double m_playerY;
+
+
+public:
+    VirtualScene() = default;
+    ~VirtualScene() = default;
+    
+    void acceptBallPosition()
+    {
+        double dX = m_dx;
+        double dY = m_dy;
+
+        if ( (dX > 0) && !m_isLeftPlayer )
+        {
+            m_playerX = m_width-100;
+            m_playerY = (double(dY)/double(dX)) * (m_playerX - m_x) + m_y;
+            
+            LOG( "virtual: " << (double(dY)/double(dX)) << " dY:" << dY << " dX:" << dX );
+            LOG( "virtual: " << m_playerX << " " << m_playerY );
+        }
+        else if ( (dX < 0) && m_isLeftPlayer )
+        {
+            m_playerX = 100;
+            m_playerY = (double(dY)/double(dX)) * m_playerX;
+        }
+
+        if ( m_playerX < 0 )
+        {
+            m_playerX = 0;
+        }
+        if ( m_playerX > m_width )
+        {
+            m_playerY = m_width;
+        }
+
+        if ( m_playerY < 0 )
+        {
+            m_playerY = 0;
+        }
+        if ( m_playerY > m_height )
+        {
+            m_playerY = m_height;
+        }
+//        m_playerX = m_width/2;
+//        m_playerY = m_height/2;
+    }
+};
+
+class ClientPlayer : public IClientPlayer, protected VirtualScene
 {
     std::string m_playerName;
-    
-    bool m_isLeftPlayer = false;
     
     TcpClient* m_tcpClient = nullptr;
     
@@ -38,7 +100,7 @@ protected:
         std::istringstream input;
         input.str(std::string((const char*)message.data().data(), message.size()));
 
-        if (command == "WaitingSecondPlayer")
+        if (command == WAIT_2d_PLAYER_CMD)
         {
         }
         else if (command == GAME_STARTED_CMD)
@@ -53,7 +115,18 @@ protected:
             else {
                 m_isLeftPlayer = false;
             }
-            //TODO
+            
+            std::string widthStr;
+            std::getline(input, widthStr, ';');
+            double width = std::stod(widthStr);
+
+            std::string heightStr;
+            std::getline(input, heightStr, ';');
+            double height = std::stod(heightStr);
+
+            m_width = width;
+            m_height = height;
+
         }
         else if (command == UPDATE_SCENE_CMD)
         {
@@ -61,13 +134,49 @@ protected:
 
             std::getline(input, number, ';');
             double x = std::stod(number);
+            m_x = x;
 
             std::getline(input, number, ';');
             double y = std::stod(number);
-            
-            LOG( "Ball: " << ++counter << ": " << m_playerName << "  :" << x << " " << y << "\n" );
+            m_y = y;
 
-            //TODO : QT->CircleWidget.setX etc...
+            std::getline(input, number, ';');
+            double dX = std::stod(number);
+            m_dx = dX;
+
+            std::getline(input, number, ';');
+            double dY = std::stod(number);
+            m_dy = dY;
+
+            std::getline(input, number, ';');
+            double x1Player = std::stod(number);
+
+            std::getline(input, number, ';');
+            double y1Player = std::stod(number);
+
+            std::getline(input, number, ';');
+            double x2Player = std::stod(number);
+
+            std::getline(input, number, ';');
+            double y2Player = std::stod(number);
+
+            std::getline(input, number, ';');
+            double ballRadius = std::stod(number);
+
+            std::getline(input, number, ';');
+            double playerRadius = std::stod(number);
+            
+            acceptBallPosition();
+
+            {
+                std::shared_ptr<boost::asio::streambuf> wrStreambuf = std::make_shared<boost::asio::streambuf>();
+                std::ostream os(&(*wrStreambuf));
+                int x = m_playerX;
+                int y = m_playerY;
+                os << CLIENT_POSITION_CMD ";" << x << ";" << y << "\n";
+                
+                m_tcpClient->sendMessageToServer( wrStreambuf );
+            }
         }
         else if (command == "Score")
         {

@@ -46,7 +46,6 @@ public:
     
     void sendMessageToServer( std::shared_ptr<boost::asio::streambuf> streambuf )
     {
-        std::cout << "Connected to the server!" << std::endl;
         async_write( m_socket, *streambuf,
             [this,streambuf] ( const boost::system::error_code& error, std::size_t bytes_transferred )
             {
@@ -59,7 +58,6 @@ public:
                     readResponse();
                 }
             });
-
     }
     
     void readResponse()

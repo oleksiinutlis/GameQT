@@ -5,6 +5,7 @@
 #pragma once
 
 // messages from seraver to client
+#define WAIT_2d_PLAYER_CMD  "WaitingSecondPlayer"
 #define GAME_STARTED_CMD    "GameStarted"
 #define UPDATE_SCENE_CMD    "UpdateScene"
 

@@ -21,12 +21,17 @@ struct Player: public IClientSessionUserData
 {
     Match&          m_match;
     IClientSession* m_session;
+    bool            m_isLeft;
     
-    int             m_width;
-    int             m_height;
+    // These variables used for saving scene size of 1-st player
+    // They used only for calculation of min size of the scene
+    int             m_tmpWidth;
+    int             m_tmpHeight;
 
-    Player( Match& match, IClientSession* session, int width, int height ) : m_match(match), m_session(session), m_width(width), m_height(height) {
-        
+    Player( Match& match, IClientSession* session, int width, int height ) : m_match(match), m_session(session), m_tmpWidth(width), m_tmpHeight(height) {
+    }
+
+    Player( Match& match, IClientSession* session ) : m_match(match), m_session(session) {
     }
 };
 
@@ -92,20 +97,17 @@ public:
     
     void onClientPositionChanged( Player* player, int x, int y )
     {
-        if ( player == m_player1.get() )
+        if ( player->m_isLeft )
         {
+            LOG( "leftPlayer: " << x << " " << y );
             m_x1Player = x;
             m_y1Player = y;
         }
-        else if ( player == m_player2.get() )
-        {
-            m_x2Player = x;
-            m_y2Player = y;
-        }
         else
         {
-            LOG_ERR( "Unknown player pointer!" );
-            exit(0);
+            LOG( "rightPlayer: " << x << " " << y );
+            m_x2Player = x;
+            m_y2Player = y;
         }
     }
 
@@ -164,6 +166,44 @@ public:
             tick();
         });
     }
+
+    void calcIntersection( double& dx, double& dy, double ballX, double ballY, double playerX, double playerY )
+    {
+        // rotate 180
+        double rDx = -dx;
+        double rDy = -dy;
+
+        // get 2-d axis
+        double x2 = ballX - playerX;
+        double y2 = ballY - playerY;
+
+        // calculate cos(fi) and sin(Fi)
+        double cosFi = (rDx * x2 + rDy * y2) / sqrt((rDx * rDx + rDy * rDy) * (x2 * x2 + y2 * y2));
+        double sinFi = sqrt(1 - cosFi * cosFi);
+
+        // do rotation
+        double dxRotated = cosFi * rDx - sinFi * rDy;
+        double dyRotated = sinFi * rDx + cosFi * rDy;
+
+        // test direction
+        double testCosFi = (dxRotated * dyRotated + x2 * y2) / sqrt((dxRotated * dxRotated + dyRotated * dyRotated) * (x2 * x2 + y2 * y2));
+
+        if (testCosFi < cosFi)
+        {
+            dx = cosFi * dxRotated - sinFi * dyRotated;
+            dy = sinFi * dxRotated + cosFi * dyRotated;
+        }
+        else
+        {
+            dxRotated = cosFi * rDx + sinFi * rDy;
+            dyRotated = -sinFi * rDx + cosFi * rDy;
+            dx = cosFi * dxRotated + sinFi * dyRotated;
+            dy = -sinFi * dxRotated + cosFi * dyRotated;
+        }
+
+        std::cout << "isIntersected" << "\n";
+        m_isIntersected = true;
+    }
     
     void calculateScene( double deltaTime )
     {
@@ -176,11 +216,14 @@ public:
         auto xBallCenter = m_xBall + m_ballRadius;
         auto yBallCenter = m_yBall + m_ballRadius;
 
-        auto realX = xBallCenter;
-        auto realY = yBallCenter;
+        auto ballX = xBallCenter;
+        auto ballY = yBallCenter;
 
-        auto realX2 = x1PlayerCenter;
-        auto realY2 = y1PlayerCenter;
+        auto playerX1 = x1PlayerCenter;
+        auto playerY1 = y1PlayerCenter;
+
+        auto playerX2 = x2PlayerCenter;
+        auto playerY2 = y2PlayerCenter;
 
         auto ellipseRadius = m_playerRadius;
         auto radius = m_ballRadius;
@@ -191,8 +234,22 @@ public:
         auto& x = m_xBall;
         auto& y = m_yBall;
 
-
-        if ((realX - realX2) * (realX - realX2) + (realY - realY2) * (realY - realY2) > (radius + ellipseRadius) * (radius + ellipseRadius))
+        // intersected with player1
+        if ( (ballX - playerX1) * (ballX - playerX1) + (ballY - playerY1) * (ballY - playerY1) <= (radius + ellipseRadius) * (radius + ellipseRadius) )
+        {
+            if ( !m_isIntersected )
+            {
+                calcIntersection( dx, dy, ballX, ballY, playerX1, playerY1 );
+            }
+        }
+        else if ( (ballX - playerX2) * (ballX - playerX2) + (ballY - playerY2) * (ballY - playerY2) <= (radius + ellipseRadius) * (radius + ellipseRadius) )
+        {
+            if ( !m_isIntersected )
+            {
+                calcIntersection( dx, dy, ballX, ballY, playerX2, playerY2 );
+            }
+        }
+        else
         {
             if (x + dx > m_width - radius || x + dx < 0) {
                 dx = -dx;
@@ -209,45 +266,6 @@ public:
                 m_isIntersected = false;
             }
         }
-        else if ( !m_isIntersected )
-        {
-            // intersected
-
-            // rotate 180
-            double rDx = -dx;
-            double rDy = -dy;
-
-            // get 2-d axis
-            double x2 = realX - realX2;
-            double y2 = realY - realY2;
-
-            // calculate cos(fi) and sin(Fi)
-            double cosFi = (rDx * x2 + rDy * y2) / sqrt((rDx * rDx + rDy * rDy) * (x2 * x2 + y2 * y2));
-            double sinFi = sqrt(1 - cosFi * cosFi);
-
-            // do rotation
-            double dxRotated = cosFi * rDx - sinFi * rDy;
-            double dyRotated = sinFi * rDx + cosFi * rDy;
-
-            // test direction
-            double testCosFi = (dxRotated * dyRotated + x2 * y2) / sqrt((dxRotated * dxRotated + dyRotated * dyRotated) * (x2 * x2 + y2 * y2));
-
-            if (testCosFi < cosFi)
-            {
-                dx = cosFi * dxRotated - sinFi * dyRotated;
-                dy = sinFi * dxRotated + cosFi * dyRotated;
-            }
-            else
-            {
-                dxRotated = cosFi * rDx + sinFi * rDy;
-                dyRotated = -sinFi * rDx + cosFi * rDy;
-                dx = cosFi * dxRotated + sinFi * dyRotated;
-                dy = -sinFi * dxRotated + cosFi * dyRotated;
-            }
-
-            std::cout << "isIntersected" << "\n";
-            m_isIntersected = true;
-        }
 
         m_xBall = m_xBall + m_dx*deltaTime;
         m_yBall = m_yBall + m_dy*deltaTime;
@@ -263,6 +281,7 @@ public:
             std::ostream os1(&(*wrStreambuf1));
             os1 << UPDATE_SCENE_CMD ";"
                 << int(m_xBall) << ";" << int(m_yBall) << ";"
+                << double(m_dx) << ";" << double(m_dy) << ";"
                 << int(m_x1Player) << ";" << int(m_y1Player) << ";"
                 << int(m_x2Player) << ";" << int(m_y2Player) << ";"
                 << int(m_ballRadius) << ";" << int(m_playerRadius) << ";\n";
@@ -275,6 +294,7 @@ public:
             std::ostream os2(&(*wrStreambuf2));
             os2 << UPDATE_SCENE_CMD ";"
                 << int(m_xBall) << ";" << int(m_yBall) << ";"
+                << double(m_dx) << ";" << double(m_dy) << ";"
                 << int(m_x1Player) << ";" << int(m_y1Player) << ";"
                 << int(m_x2Player) << ";" << int(m_y2Player) << ";"
                 << int(m_ballRadius) << ";" << int(m_playerRadius) << ";\n";
@@ -288,7 +308,6 @@ class Game: public IGame
 {
     io_context&             m_serverIoContext;
 
-    std::map<IClientSession*,std::shared_ptr<Match>> m_clientMap;
     std::list<Match> m_matchList;
     
 public:
@@ -342,29 +361,42 @@ public:
                     }
                     
                     LOG( "message from 2-d player" );
-                    int minWidth = std::min( width, matchIt->m_player1->m_width );
-                    int minHeight = std::min( height, matchIt->m_player1->m_height );
-                    matchIt->m_player1->m_width = minWidth;
-                    matchIt->m_player1->m_height = minHeight;
-                    
+                    // calculate scene size
+                    int minWidth = std::min( width, matchIt->m_player1->m_tmpWidth );
+                    int minHeight = std::min( height, matchIt->m_player1->m_tmpHeight );
+
+                    // initialize match scene size
                     matchIt->m_player1->m_match.init( minWidth, minHeight );
                     
-                    matchIt->m_player2 = std::make_shared<Player>( *matchIt, &client, minWidth, minHeight );
+                    // init 2-d player
+                    matchIt->m_player2 = std::make_shared<Player>( *matchIt, &client );
                     
-                    std::shared_ptr<boost::asio::streambuf> wrStreambuf1 = std::make_shared<boost::asio::streambuf>();
-                    std::ostream os1(&(*wrStreambuf1));
-                    os1 << GAME_STARTED_CMD ";right;" << minWidth << ";" << minHeight << ";\n";
+                    //
+                    // Send GAME_STARTED_CMD message to 1-st player
+                    //
+                    std::shared_ptr<boost::asio::streambuf> wrStreambuf = std::make_shared<boost::asio::streambuf>();
+                    std::ostream os(&(*wrStreambuf));
+                    os << GAME_STARTED_CMD ";left;" << minWidth << ";" << minHeight << ";\n";
 
-                    matchIt->m_player2->m_session->sendMessage( wrStreambuf1 );
-
+                    matchIt->m_player2->m_isLeft = true;
+                    matchIt->m_player1->m_session->sendMessage( wrStreambuf );
+                    
+                    //
+                    // Send GAME_STARTED_CMD message to 2-d player
+                    //
                     std::shared_ptr<boost::asio::streambuf> wrStreambuf2 = std::make_shared<boost::asio::streambuf>();
                     std::ostream os2(&(*wrStreambuf2));
-                    os2 << GAME_STARTED_CMD ";left;" << minWidth << ";" << minHeight << ";\n";
+                    os2 << GAME_STARTED_CMD ";right;" << minWidth << ";" << minHeight << ";\n";
 
-                    matchIt->m_player1->m_session->sendMessage( wrStreambuf2 );
-                    auto base = std::dynamic_pointer_cast<IClientSessionUserData>( matchIt->m_player1 );
+                    matchIt->m_player2->m_isLeft = false;
+                    matchIt->m_player2->m_session->sendMessage( wrStreambuf2 );
+
+                    // Set userPtr to 2-d player
+                    auto base = std::dynamic_pointer_cast<IClientSessionUserData>( matchIt->m_player2 );
                     client.setUserInfoPtr( std::weak_ptr<IClientSessionUserData>( base ) );
 
+
+                    // Start game
                     matchIt->m_player1->m_match.start();
                     return;
                 }
@@ -373,18 +405,17 @@ public:
             // we have received 'StartGame' message from 1-st player
             LOG( "message from 1-d player" );
             
-            if ( auto it = m_clientMap.find(&client); it != m_clientMap.end() )
-            {
-                LOG_ERR( "OldClientSessionIsNotRemoved" );
-                client.sendMessage( "OldClientSessionIsNotRemoved;\n" );
-                return;
-            }
-            
+            // Add new match
             m_matchList.emplace_front( m_serverIoContext, matchId );
+            
+            //
+            // Send WAIT_2d_PLAYER_CMD command to 1-st player
+            //
             auto& front = m_matchList.front();
             front.m_player1 = std::make_shared<Player>( front, &client, width, height );
-            client.sendMessage( "WaitingSecondPlayer;\n" );
+            client.sendMessage( WAIT_2d_PLAYER_CMD ";\n" );
             
+            // set userPtr
             auto base = std::dynamic_pointer_cast<IClientSessionUserData>( front.m_player1 );
             client.setUserInfoPtr( std::weak_ptr<IClientSessionUserData>( base ) );
         }

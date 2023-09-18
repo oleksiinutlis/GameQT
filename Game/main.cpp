@@ -37,33 +37,33 @@ int main(int argc, char* argv[])
             server.execute();
         }).detach();
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // Real player
+        std::thread([&scene]
+        {
+            QtClientPlayer player1{ scene };
 
-        // clients
+            io_context  ioContext1;
+            TcpClient client1(ioContext1, player1);
+            player1.setTcpClient(&client1);
+            client1.execute("127.0.0.1", 1234, START_GAME_CMD ";001;1000;800;");
+
+            ioContext1.run();
+        }).detach();
+
+        // Virtual Test Player (for testing)
         std::thread([]
-            {
-                io_context  ioContext;
+        {
+            io_context  ioContext;
 
-                ClientPlayer player1{ "player1" };
+            ClientPlayer player2{ "player2" };
 
-                TcpClient client1(ioContext, player1);
-                player1.setTcpClient(&client1);
-                client1.execute("127.0.0.1", 1235, START_GAME_CMD ";001;800;600;");
+            TcpClient client2(ioContext, player2);
+            player2.setTcpClient(&client2);
+            client2.execute("127.0.0.1", 1235, START_GAME_CMD ";001;800;600;");
 
-                ioContext.run();
-            }).detach();
+            ioContext.run();
+        }).detach();
 
-            std::thread([&scene]
-                {
-                    QtClientPlayer player2{ scene };
-
-                    io_context  ioContext2;
-                    TcpClient client2(ioContext2, player2);
-                    player2.setTcpClient(&client2);
-                    client2.execute("127.0.0.1", 1234, START_GAME_CMD ";001;1000;800;");
-
-                    ioContext2.run();
-                }).detach();
 
                 //    w.resize(1200, 600);
                 //    CircleWidget circleWidget;
@@ -74,3 +74,4 @@ int main(int argc, char* argv[])
 
                 return a.exec();
 }
+

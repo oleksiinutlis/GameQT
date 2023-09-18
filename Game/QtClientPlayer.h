@@ -42,7 +42,7 @@ public:
         std::istringstream input;
         input.str(std::string((const char*)message.data().data(), message.size()));
 
-        if (command == "WaitingSecondPlayer")
+        if (command == WAIT_2d_PLAYER_CMD)
         {
         }
         else if (command == GAME_STARTED_CMD)
@@ -78,10 +78,12 @@ public:
 
             std::getline(input, number, ';');
             double y = std::stod(number);
+            
+            std::getline(input, number, ';');
+            double dX = std::stod(number);
 
-            //            << int(m_x1Player) << ";" << int(m_y1Player) << ";"
-            //            << int(m_x2Player) << ";" << int(m_y2Player) << ";"
-            //            << int(m_ballRadius) << ";" << int(m_playerRadius) << ";\n"
+            std::getline(input, number, ';');
+            double dY = std::stod(number);
 
             std::getline(input, number, ';');
             double x1Player = std::stod(number);
@@ -100,8 +102,6 @@ public:
 
             std::getline(input, number, ';');
             double playerRadius = std::stod(number);
-
-            //LOG( UPDATE_SCENE_CMD ": " << m_playerName << "  :" << x << " " << y << "\n" );
 
             m_scene.draw(x, y, x1Player, y1Player, x2Player, y2Player, ballRadius, playerRadius);
         }
