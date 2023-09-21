@@ -89,10 +89,10 @@ public:
         m_dy = 2;
 
         m_x1Player = 2*m_playerRadius;
-        m_y1Player = m_height/2;
+        m_y1Player = m_height*2;
         
         m_x2Player = m_width - 2*m_playerRadius;
-        m_y2Player = m_height/2;
+        m_y2Player = m_height*2;
     }
     
     void onClientPositionChanged( Player* player, int x, int y )
@@ -118,7 +118,7 @@ public:
         m_lastTimestamp = std::chrono::high_resolution_clock::now();
 
         // delay on start
-        m_timer.expires_after( std::chrono::milliseconds( 30 ));
+        m_timer.expires_after( std::chrono::milliseconds( 3000 ));
         m_timer.async_wait([this](const boost::system::error_code& ec )
         {
             if ( ec )
@@ -243,6 +243,7 @@ public:
                 calcIntersection( dx, dy, ballX, ballY, playerX1, playerY1 );
             }
         }
+        // intersected with player2
         else if ( (ballX - playerX2) * (ballX - playerX2) + (ballY - playerY2) * (ballY - playerY2) <= (radius + ellipseRadius) * (radius + ellipseRadius) )
         {
             if ( !m_isIntersected )
@@ -250,6 +251,7 @@ public:
                 calcIntersection( dx, dy, ballX, ballY, playerX2, playerY2 );
             }
         }
+        // not intersected
         else
         {
             if (x + dx > m_width - radius || x + dx < 0) {
