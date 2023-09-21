@@ -24,7 +24,17 @@ if (APPLE)
     link_directories(/usr/local/opt/openssl/lib)
 endif()
 
-#if (WINDOWS)
+if (WIN32)
+    #set(BOOST_ROOT "C:/Boost/boost_1_82_0")
+    #set(BOOST_INCLUDEDIR "C:/Boost/boost_1_82_0/")
+    #set(BOOST_LIBRARYDIR "C:/Boost/boost_1_82_0/libs")
+    #set(BOOST_COMPONENTS system)
+    #find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+
+    #include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+    include_directories(SYSTEM ../../../Boost/boost_1_82_0/)
+    #set(BOOST_INCLUDE_DIR "C:/Boost/boost_1_82_0/boost")
+    #set(BOOST_LIB_DIR "C:/Boost/boost_1_82_0/libs")
     #set(CMAKE_PREFIX_PATH "X:/Qt/6.5.1/mingw_64")
     #set(CMAKE_PREFIX_PATH "X:/Qt/6.5.1/mingw_64")
     #set(BOOST_INCLUDE_DIR "/usr/local/include")
@@ -34,7 +44,8 @@ endif()
 
 # for -lcrypto (I do not know who uses it!)
     #link_directories(/usr/local/opt/openssl/lib)
-#endif()
+endif()
+
 
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)

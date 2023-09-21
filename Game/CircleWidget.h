@@ -6,6 +6,7 @@
 #include <QVBoxLayout>
 #include <QTimer>
 #include <QMouseEvent>
+#include <iostream>
 
 class CircleWidget : public QWidget {
 public:
@@ -33,8 +34,6 @@ protected:
 
     void calculateScene()
     {
-        auto halfSum = (radius - ellipseRadius);
-
         auto realX = x + radius;
         auto realY = y + radius;
         //        std::cout << "x:" << realX << " y:" << realY << "\n";
