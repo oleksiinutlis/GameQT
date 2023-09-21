@@ -60,6 +60,8 @@ int main(int argc, char* argv[])
             TcpClient client2(ioContext, player2);
             player2.setTcpClient(&client2);
             client2.execute("127.0.0.1", 1235, START_GAME_CMD ";001;800;600;");
+            
+            std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 
             ioContext.run();
         }).detach();

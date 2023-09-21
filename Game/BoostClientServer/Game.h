@@ -85,8 +85,8 @@ public:
         
         m_xBall = m_width/2.0;
         m_yBall = m_height/2.0;
-        m_dx = 3;
-        m_dy = 1;
+        m_dx = 6;
+        m_dy = 2;
 
         m_x1Player = 2*m_playerRadius;
         m_y1Player = m_height/2;
@@ -117,7 +117,8 @@ public:
     {
         m_lastTimestamp = std::chrono::high_resolution_clock::now();
 
-        m_timer.expires_after( std::chrono::milliseconds( 3000 ));
+        // delay on start
+        m_timer.expires_after( std::chrono::milliseconds( 30 ));
         m_timer.async_wait([this](const boost::system::error_code& ec )
         {
             if ( ec )
@@ -378,7 +379,7 @@ public:
                     std::ostream os(&(*wrStreambuf));
                     os << GAME_STARTED_CMD ";left;" << minWidth << ";" << minHeight << ";\n";
 
-                    matchIt->m_player2->m_isLeft = true;
+                    matchIt->m_player1->m_isLeft = true;
                     matchIt->m_player1->m_session->sendMessage( wrStreambuf );
                     
                     //

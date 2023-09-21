@@ -108,7 +108,7 @@ protected:
             std::string direction;
             std::getline(input, direction, ';');
             
-            if ( command == "left" )
+            if ( direction == "left" )
             {
                 m_isLeftPlayer = true;
             }
