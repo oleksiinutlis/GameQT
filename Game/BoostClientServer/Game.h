@@ -73,8 +73,9 @@ public:
     double m_ballRadius = 15;
     double m_playerRadius = 50;
     
-    bool   m_isIntersected = false;
-    
+    bool   m_isIntersected1 = false;
+    bool   m_isIntersected2 = false;
+
     void init( int width, int height )
     {
         m_width = width;
@@ -99,13 +100,13 @@ public:
     {
         if ( player->m_isLeft )
         {
-            LOG( "leftPlayer: " << x << " " << y );
+//            LOG( "leftPlayer: " << x << " " << y );
             m_x1Player = x;
             m_y1Player = y;
         }
         else
         {
-            LOG( "rightPlayer: " << x << " " << y );
+            //LOG( "rightPlayer: " << x << " " << y );
             m_x2Player = x;
             m_y2Player = y;
         }
@@ -168,7 +169,7 @@ public:
         });
     }
 
-    void calcIntersection( double& dx, double& dy, double ballX, double ballY, double playerX, double playerY )
+    void calcBump( double& dx, double& dy, double ballX, double ballY, double playerX, double playerY )
     {
         // rotate 180
         double rDx = -dx;
@@ -201,9 +202,6 @@ public:
             dx = cosFi * dxRotated + sinFi * dyRotated;
             dy = -sinFi * dxRotated + cosFi * dyRotated;
         }
-
-        std::cout << "isIntersected" << "\n";
-        m_isIntersected = true;
     }
     
     void calculateScene( double deltaTime )
@@ -236,19 +234,24 @@ public:
         auto& y = m_yBall;
 
         // intersected with player1
-        if ( (ballX - playerX1) * (ballX - playerX1) + (ballY - playerY1) * (ballY - playerY1) <= (radius + ellipseRadius) * (radius + ellipseRadius) )
+        if ( (ballX - playerX1) * (ballX - playerX1) + (ballY - playerY1) * (ballY - playerY1) <= (radius + ellipseRadius+3) * (radius + ellipseRadius+3) )
         {
-            if ( !m_isIntersected )
+            if ( !m_isIntersected1 )
             {
-                calcIntersection( dx, dy, ballX, ballY, playerX1, playerY1 );
+                calcBump( dx, dy, ballX, ballY, playerX1, playerY1 );
+                m_isIntersected1 = true;
+                static int counter = 0;
+                std::cout << "--" << ++counter << " bump1\n";
             }
         }
         // intersected with player2
-        else if ( (ballX - playerX2) * (ballX - playerX2) + (ballY - playerY2) * (ballY - playerY2) <= (radius + ellipseRadius) * (radius + ellipseRadius) )
+        else if ( (ballX - playerX2) * (ballX - playerX2) + (ballY - playerY2) * (ballY - playerY2) <= (radius + ellipseRadius+3) * (radius + ellipseRadius+3) )
         {
-            if ( !m_isIntersected )
+            if ( !m_isIntersected2 )
             {
-                calcIntersection( dx, dy, ballX, ballY, playerX2, playerY2 );
+                calcBump( dx, dy, ballX, ballY, playerX2, playerY2 );
+                m_isIntersected1 = true;
+                //std::cout << "--bump2\n";
             }
         }
         // not intersected
@@ -261,12 +264,13 @@ public:
                 dy = -dy;
             }
 
-            if ( m_isIntersected )
+            if ( m_isIntersected1 )
             {
-                static int counter = 0;
-                std::cout << "--" << counter++ << "\n";
-
-                m_isIntersected = false;
+                m_isIntersected1 = false;
+            }
+            if ( m_isIntersected2 )
+            {
+                m_isIntersected2 = false;
             }
         }
 
@@ -319,7 +323,7 @@ public:
     
     virtual void handlePlayerMessage( IClientSession& client, boost::asio::streambuf& message ) override
     {
-        LOG( "SERVER: Recieved from client: " << std::string( (const char*)message.data().data(), message.size() ).c_str() <<"\n");
+        //LOG( "SERVER: Recieved from client: " << std::string( (const char*)message.data().data(), message.size() ).c_str() <<"\n");
 
         std::istringstream input;
         input.str( std::string( (const char*)message.data().data(), message.size() ) );

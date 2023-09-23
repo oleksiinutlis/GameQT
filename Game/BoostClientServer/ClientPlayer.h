@@ -37,8 +37,8 @@ public:
             m_playerX = m_width-100;
             m_playerY = (double(dY)/double(dX)) * (m_playerX - m_x) + m_y;
             
-            LOG( "virtual: " << (double(dY)/double(dX)) << " dY:" << dY << " dX:" << dX );
-            LOG( "virtual: " << m_playerX << " " << m_playerY );
+//            LOG( "virtual: " << (double(dY)/double(dX)) << " dY:" << dY << " dX:" << dX );
+//            LOG( "virtual: " << m_playerX << " " << m_playerY );
         }
         else if ( (dX < 0) && m_isLeftPlayer )
         {
@@ -77,7 +77,7 @@ class ClientPlayer : public IClientPlayer, protected VirtualScene
 public:
     ClientPlayer( std::string playerName ) : m_playerName(playerName) {}
     
-    const std::string& playerName() const override { return m_playerName; }
+    //const std::string& playerName() const override { return m_playerName; }
 
     void setTcpClient( TcpClient* tcpClient ) { m_tcpClient = tcpClient; }
     
@@ -96,7 +96,7 @@ protected:
     
     virtual void handleServerMessage( const std::string& command, boost::asio::streambuf& message ) override
     {
-        LOG("Client: Recieved from server: " << m_playerName.c_str() << ": " << command.c_str() << " " << std::string((const char*)message.data().data(), message.size()-1).c_str() );
+        //LOG("Client: Recieved from server: " << m_playerName.c_str() << ": " << command.c_str() << " " << std::string((const char*)message.data().data(), message.size()-1).c_str() );
         std::istringstream input;
         input.str(std::string((const char*)message.data().data(), message.size()));
 

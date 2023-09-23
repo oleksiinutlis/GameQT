@@ -4,14 +4,12 @@
 
 #pragma once
 
-// messages from seraver to client
-#define WAIT_2d_PLAYER_CMD  "WaitingSecondPlayer"
-#define GAME_STARTED_CMD    "GameStarted"
-#define UPDATE_SCENE_CMD    "UpdateScene"
+// messages from server to client
+#define MESSAGE_FROM_CMD    "MESSAGE_FROM" // cmd;nick_name;message
 
 // messages from client to seraver
-#define START_GAME_CMD      "StartGame"
-#define CLIENT_POSITION_CMD "ClientPosition"
+#define JOIN_TO_CHAT_CMD    "JOIN_TO_CHAT"    // cmd;nick_name
+#define MESSAGE_TO_ALL_CMD  "MESSAGE_TO_ALL"  // cmd;message
 
 using namespace boost::asio;
 using ip::tcp;
@@ -34,32 +32,21 @@ public:
     virtual std::weak_ptr<IClientSessionUserData> getUserInfoPtr() = 0;
 };
 
-class IGame
+class IChart
 {
 protected:
-    virtual ~IGame() = default;
+    virtual ~IChart() = default;
 
 public:
-    virtual void handlePlayerMessage( IClientSession&, boost::asio::streambuf& message ) = 0;
+    virtual void handleMessage( IClientSession&, boost::asio::streambuf& message ) = 0;
 };
 
-class IClientPlayer
+class IChartClient
 {
 protected:
-    virtual ~IClientPlayer() = default;
+    virtual ~IChartClient() = default;
 
 public:
     virtual void handleServerMessage( const std::string& command, boost::asio::streambuf& message ) = 0;
-    //virtual const std::string& playerName() const = 0;
 };
 
-class IMouseEventHandler
-{
-protected:
-    virtual ~IMouseEventHandler() = default;
-
-public:
-    virtual void mousePressEvent(QMouseEvent* event)   = 0;
-    virtual void mouseMoveEvent(QMouseEvent* event)    = 0;
-    virtual void mouseReleaseEvent(QMouseEvent* event) = 0;
-};
