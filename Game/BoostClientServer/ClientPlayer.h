@@ -96,7 +96,7 @@ protected:
     
     virtual void handleServerMessage( const std::string& command, boost::asio::streambuf& message ) override
     {
-        LOG("Client: Recieved from server: " << m_playerName << ": " << command << " " << std::string((const char*)message.data().data(), message.size()-1) );
+        LOG("Client: Recieved from server: " << m_playerName.c_str() << ": " << command.c_str() << " " << std::string((const char*)message.data().data(), message.size()-1).c_str() );
         std::istringstream input;
         input.str(std::string((const char*)message.data().data(), message.size()));
 

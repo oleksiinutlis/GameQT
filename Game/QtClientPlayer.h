@@ -37,7 +37,12 @@ public:
 
     virtual void handleServerMessage(const std::string& command, boost::asio::streambuf& message) override
     {
-        LOG("QtClientPlayer: Recieved from server: " << m_playerName << ": " << command << " " << std::string((const char*)message.data().data(), message.size() - 1));
+        if ( message.size() <= 0 )
+        {
+            return;
+        }
+        LOG("QtClientPlayer: message.size(): " << message.size() );
+        LOG("QtClientPlayer: Recieved from server: " << m_playerName.c_str() << ": " << command.c_str() << " " << std::string((const char*)message.data().data(), message.size() - 1).c_str() );
 
         std::istringstream input;
         input.str(std::string((const char*)message.data().data(), message.size()));

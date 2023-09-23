@@ -123,7 +123,7 @@ public:
         {
             if ( ec )
             {
-                LOG( "Timer error:" << ec.message() );
+                LOG( "Timer error:" << ec.message().c_str() );
                 exit(1);
             }
             tick();
@@ -156,7 +156,7 @@ public:
             
             if ( ec )
             {
-                LOG( "Timer error:" << ec.message() );
+                LOG( "Timer error:" << ec.message().c_str() );
                 exit(1);
             }
             
@@ -319,7 +319,7 @@ public:
     
     virtual void handlePlayerMessage( IClientSession& client, boost::asio::streambuf& message ) override
     {
-        LOG( "SERVER: Recieved from client: " << std::string( (const char*)message.data().data(), message.size() ) << std::endl);
+        LOG( "SERVER: Recieved from client: " << std::string( (const char*)message.data().data(), message.size() ).c_str() <<"\n");
 
         std::istringstream input;
         input.str( std::string( (const char*)message.data().data(), message.size() ) );
