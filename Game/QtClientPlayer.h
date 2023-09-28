@@ -23,7 +23,7 @@ class QtClientPlayer : public IClientPlayer, public IMouseEventHandler
     bool        m_isLeftPlayer;
     double      m_xRatio;
     double      m_yRatio;
-    bool        m_isMousePressed = false;
+    bool        m_isMousePressed = true;
 
     std::string m_playerName = "QtClientPlayer";
 
@@ -31,6 +31,7 @@ public:
     QtClientPlayer(Scene& scene) : m_scene(scene)
     {
         m_scene.setMouseEventHandler( this );
+        m_scene.setMouseTracking(true);
     }
 
     void setTcpClient( TcpClient* tcpClient ) { m_tcpClient = tcpClient; }
@@ -127,13 +128,13 @@ public:
     //virtual const std::string& playerName() const override { return m_playerName; }
     
     void mousePressEvent(QMouseEvent* event) override {
-        if (event->button() == Qt::LeftButton) {
-            m_isMousePressed = true;
-        }
+//        if (event->button() == Qt::LeftButton) {
+//            m_isMousePressed = true;
+//        }
     }
 
     void mouseMoveEvent(QMouseEvent* event) override {
-        if ( m_isMousePressed && m_tcpClient != nullptr )
+//        if ( m_isMousePressed && m_tcpClient != nullptr )
         {
             std::shared_ptr<boost::asio::streambuf> wrStreambuf = std::make_shared<boost::asio::streambuf>();
             std::ostream os(&(*wrStreambuf));
@@ -147,9 +148,9 @@ public:
     }
 
     void mouseReleaseEvent(QMouseEvent* event) override {
-        if (event->button() == Qt::LeftButton) {
-            m_isMousePressed = false;
-        }
+//        if (event->button() == Qt::LeftButton) {
+//            m_isMousePressed = false;
+//        }
     }
 
 };
