@@ -24,6 +24,9 @@ class QtClientPlayer : public IClientPlayer, public IMouseEventHandler
     double      m_xRatio;
     double      m_yRatio;
     bool        m_isMousePressed = true;
+    
+    int         m_oldX = -1;
+    int         m_oldY = -1;
 
     std::string m_playerName = "QtClientPlayer";
 
@@ -140,8 +143,10 @@ public:
             std::ostream os(&(*wrStreambuf));
             int x = event->pos().x();
             int y = event->pos().y();
-            os << CLIENT_POSITION_CMD ";" << x << ";" << y << "\n";
-            
+            os << CLIENT_POSITION_CMD ";" << x << ";" << y << ";" << m_oldX << ";" << m_oldY << "\n";
+            m_oldX = x;
+            m_oldY = y;
+
             m_tcpClient->sendMessageToServer( wrStreambuf );
 
         }

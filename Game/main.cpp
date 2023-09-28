@@ -11,9 +11,9 @@
 
 #include "BoostClientServer/Server.h"
 #include "BoostClientServer/TcpClient.h"
-#include "BoostClientServer/Game.h"
 #include "BoostClientServer/ClientPlayer.h"
 
+#include "Game.h"
 #include "Scene.h"
 #include "QtClientPlayer.h"
 #include "CircleWidget.h"

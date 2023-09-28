@@ -59,10 +59,11 @@ set(PROJECT_SOURCES
         QtClientPlayer.h
         CircleWidget.h
         Scene.h
+        Game.h
         BoostClientServer/Server.h
         BoostClientServer/TcpClient.h
-        BoostClientServer/Game.h
         BoostClientServer/ClientPlayer.h
+        BoostClientServer/Interfaces.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
